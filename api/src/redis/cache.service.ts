@@ -1,12 +1,13 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { Redis } from "ioredis";
+import { PinoLogger } from "nestjs-pino";
 
 @Injectable()
 export class CacheService {
     private hits = 0;
     private misses = 0;
 
-    constructor(@Inject("REDIS") private readonly redis: Redis) {}
+    constructor(@Inject("REDIS") private readonly redis: Redis, private readonly logger: PinoLogger) {}
 
     async get<T>(key: string): Promise<T | null> {
         try {
@@ -50,6 +51,14 @@ export class CacheService {
         const tagKey = `tag:${tag}`;
         const keys = await this.redis.smembers(tagKey);
         if (keys.length > 0) await this.redis.unlink(...keys, tagKey);
+    
+        this.logger.info(
+            {
+                tag,
+                invalidatedKeys: keys.length,
+            },
+            "Cache invalidated by tag",
+        );
     }
 
     async acquireLock(key: string, ttlMs = 3000): Promise<boolean> {

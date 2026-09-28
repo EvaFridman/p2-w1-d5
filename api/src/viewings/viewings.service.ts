@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateViewingDto } from './dto/create-viewing.dto.js';
 import { ListViewingsDto } from './dto/list-viewings.dto.js';
@@ -11,7 +12,12 @@ import { PublisherService } from "../queue/publisher.service.js";
 
 @Injectable()
 export class ViewingsService {
-    constructor(private readonly prisma: PrismaService, private readonly configService: ConfigService, private readonly publisherService: PublisherService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly configService: ConfigService,
+        private readonly publisherService: PublisherService,
+        private readonly logger: PinoLogger,
+    ) { }
 
     private handlePrismaError(error: any) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -26,7 +32,7 @@ export class ViewingsService {
         const listing = await this.prisma.listings.findUnique({ where: { id: listingId } });
         if (!listing) throw new NotFoundError('Listing not found');
 
-        return await this.prisma.viewings.create({
+        const viewing = await this.prisma.viewings.create({
             data: {
                 listingId,
                 ...dto,
@@ -35,6 +41,16 @@ export class ViewingsService {
                 updatedAt: new Date(),
             }
         });
+        
+        this.logger.info(
+            {
+                viewingId: viewing.id,
+                listingId,
+            },
+            'Viewing created',
+        );
+        
+        return viewing;
     }
 
     async findAll(dto: ListViewingsDto, user: { id: number; role: string }) {
@@ -107,9 +123,10 @@ export class ViewingsService {
 
     async updateStatus(id: number, dto: UpdateStatusDto, user: { id: number; role: string }) {
         try {
-            const updatedViewing = await this.prisma.$transaction(async (tx) => {
+            const result = await this.prisma.$transaction(async (tx) => {
                 const viewing = await tx.viewings.findUnique({ where: { id }, include: { listing: true } });
                 if (!viewing) throw new NotFoundError('Viewing not found');
+                const previousStatus = viewing.status;
                 if (user.role === UserRole.agent && viewing.listing?.agentId !== user.id) throw new ForbiddenError('You do not have access to this viewing');
                 if (!canTransition(viewing.status, dto.status)) {
                     const allowed = getAllowedTransitions(viewing.status).join(', ');
@@ -120,8 +137,23 @@ export class ViewingsService {
                 const triggerStatuses: ViewingStatus[] = [ViewingStatus.APPROVED, ViewingStatus.REJECTED, ViewingStatus.CLOSED];
                 if (triggerStatuses.includes(dto.status)) updateData.notifiedAt = new Date();
 
-                return await tx.viewings.update({ where: { id }, data: updateData, include: { listing: true } });
+                const updatedViewing = await tx.viewings.update({ where: { id }, data: updateData, include: { listing: true } });
+
+                return { updatedViewing, previousStatus };
             });
+
+            const { updatedViewing, previousStatus } = result;
+
+            this.logger.info(
+                {
+                    viewingId: updatedViewing.id,
+                    listingId: updatedViewing.listingId,
+                    userId: user.id,
+                    fromStatus: previousStatus,
+                    toStatus: updatedViewing.status,
+                },
+                'Viewing status changed',
+            );
 
             this.publisherService.publish("viewing.status-changed", { viewingId: updatedViewing.id }, { messageId: `viewing-status-changed:${updatedViewing.id}` });
 

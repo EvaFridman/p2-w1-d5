@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ListListingsDto } from './dto/list-listings.dto.js';
 import { CreateListingDto } from './dto/create-listing.dto.js';
@@ -25,7 +26,8 @@ export class ListingsService {
     private readonly configService: ConfigService,
     private readonly events: EventEmitter2,
     private readonly pdfService: PdfService,
-    private readonly publisherService: PublisherService
+    private readonly publisherService: PublisherService,
+    private readonly logger: PinoLogger
   ) { }
 
   private handlePrismaError(error: any) {
@@ -118,7 +120,7 @@ export class ListingsService {
     }
   }
 
-  async expireOldListings(): Promise<number> {
+  async expireOldListings(): Promise<{ processed: number; errors: number }> {
     const cutoff = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 
     const listings = await this.prisma.listings.findMany({
@@ -129,18 +131,23 @@ export class ListingsService {
         select: { id: true },
     });
 
-    let expired = 0;
+    let processed = 0;
+    let errors = 0;
 
     for (const listing of listings) {
-      await this.updateStatus(
+      try {
+        await this.updateStatus(
           listing.id,
           { status: ListingStatus.UNPUBLISHED },
           { expired: true },
-      );
-      expired++;
-  }
+        );
+        processed++;
+      } catch {
+        errors++;
+      }
+    }
 
-    return expired;
+    return { processed, errors };
   }
 
   async updateStatus(id: number, dto: UpdateStatusDto, options?: { expired?: boolean }): Promise<any> {
@@ -183,6 +190,14 @@ export class ListingsService {
       });
 
       if (updatedListing.status === ListingStatus.PUBLISHED) {
+        this.logger.info(
+          {
+            listingId: updatedListing.id,
+            agentId: updatedListing.agentId,
+          },
+          "Listing published",
+        );
+
         this.events.emit(
             ListingPublishedEvent.eventName,
             new ListingPublishedEvent(updatedListing.id, updatedListing.agentId, updatedListing.title)
@@ -194,15 +209,27 @@ export class ListingsService {
             messageId: `listing-published:${updatedListing.id}`,
         });
       }
-      
-      if (options?.expired && updatedListing.status === ListingStatus.UNPUBLISHED) {
-          this.publisherService.publish("listing.expired", {
+
+      if (updatedListing.status === ListingStatus.UNPUBLISHED) {
+        if (!options?.expired) {
+          this.logger.info(
+            {
               listingId: updatedListing.id,
               agentId: updatedListing.agentId,
-              title: updatedListing.title,
+            },
+            "Listing unpublished",
+          );
+        }
+
+        if (options?.expired) {
+          this.publisherService.publish("listing.expired", {
+            listingId: updatedListing.id,
+            agentId: updatedListing.agentId,
+            title: updatedListing.title,
           }, {
               messageId: `listing-expired:${updatedListing.id}`,
           });
+        }
       }
 
       return {
@@ -320,7 +347,6 @@ export class ListingsService {
 
     return pdfStream;
   }
-
 
   async getListingsBundleStream(ids: number[]): Promise<PassThrough> {
     const listings = await this.prisma.listings.findMany({where: { id: { in: ids } },include: { district: true, agent: { select: { id: true, name: true, email: true }}}});

@@ -96,15 +96,20 @@ export class MailConsumer implements OnModuleInit, OnModuleDestroy {
             result = message.fields.redelivered ? "dead-lettered" : "retry";
             this.channel.nack(message, false, !message.fields.redelivered);
         } finally {
-            this.logger.info(
-                {
-                    routingKey,
-                    messageId,
-                    result,
-                    durationMs: Date.now() - startedAt,
-                },
-                "Mail message processed",
-            );
+            const logData = {
+                routingKey,
+                messageId,
+                result,
+                durationMs: Date.now() - startedAt,
+            };
+        
+            if (message.fields.redelivered) {
+                this.logger.warn(logData, "Repeated mail message delivery");
+            } else if (result === "processed") {
+                this.logger.info(logData, "Mail sent by worker");
+            } else {
+                this.logger.info(logData, "Mail message skipped");
+            }
         }
     }
 }

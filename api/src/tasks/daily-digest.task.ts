@@ -1,12 +1,10 @@
-import { Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service.js";
 import { PublisherService } from "../queue/publisher.service.js";
 import { CacheService } from "../redis/cache.service.js";
 
-const logger = new Logger("DailyDigestTask");
 const DAILY_DIGEST_TTL = 2 * 24 * 60 * 60;
 
-export async function dailyDigestTask(prisma: PrismaService, publisherService: PublisherService, cacheService: CacheService): Promise<number> {
+export async function dailyDigestTask(prisma: PrismaService, publisherService: PublisherService, cacheService: CacheService): Promise<{ processed: number; errors: number }> {
     const now = new Date();
     const from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const date = now.toISOString().slice(0, 10);
@@ -51,31 +49,33 @@ export async function dailyDigestTask(prisma: PrismaService, publisherService: P
         agentIds.add(statusChange.agentId);
     }
 
-    let published = 0;
+    let processed = 0;
+    let errors = 0;
 
     for (const agentId of agentIds) {
-        const markerKey = `agent-digest:${agentId}:${date}`;
-        const marked = await cacheService.setIfNotExists(markerKey, true, DAILY_DIGEST_TTL);
+        try {
+            const markerKey = `agent-digest:${agentId}:${date}`;
+            const marked = await cacheService.setIfNotExists(markerKey, true, DAILY_DIGEST_TTL);
 
-        if (!marked) {
-            logger.log(`Digest skipped: agent ${agentId} already processed for ${date}`);
-            continue;
+            if (!marked) continue;
+
+            publisherService.publish(
+                "agent.digest",
+                {
+                    agentId,
+                    periodFrom: from.toISOString(),
+                    periodTo: now.toISOString(),
+                },
+                {
+                    messageId: `agent-digest:${agentId}:${date}`,
+                },
+            );
+
+            processed++;
+        } catch {
+            errors++;
         }
-
-        publisherService.publish(
-            "agent.digest",
-            {
-                agentId,
-                periodFrom: from.toISOString(),
-                periodTo: now.toISOString(),
-            },
-            {
-                messageId: `agent-digest:${agentId}:${date}`,
-            },
-        );
-
-        published++;
     }
 
-    return published;
+    return { processed, errors };
 }

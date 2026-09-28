@@ -24,6 +24,7 @@ export class ActivityConsumer implements OnModuleInit, OnModuleDestroy {
     }
 
     private async handleMessage(message: ConsumeMessage) {
+        let repeated = false;
         const startedAt = Date.now();
         const routingKey = message.fields.routingKey;
         const messageId = message.properties.messageId;
@@ -49,6 +50,7 @@ export class ActivityConsumer implements OnModuleInit, OnModuleDestroy {
                 const alreadySent = await this.cacheService.get<boolean>(sentKey);
 
                 if (alreadySent) {
+                    repeated = true;
                     result = "skipped";
                     this.channel.ack(message);
                     return;
@@ -63,16 +65,19 @@ export class ActivityConsumer implements OnModuleInit, OnModuleDestroy {
             result = message.fields.redelivered ? "dead-lettered" : "retry";
             this.channel.nack(message, false, !message.fields.redelivered);
         } finally {
-            this.logger.info(
-                {
-                    routingKey,
-                    messageId: messageId ?? "-",
-                    result,
-                    entityId: entityId ?? "-",
-                    durationMs: Date.now() - startedAt,
-                },
-                "Activity message processed",
-            );
+            const logData = {
+                routingKey,
+                messageId: messageId ?? "-",
+                result,
+                entityId: entityId ?? "-",
+                durationMs: Date.now() - startedAt,
+            };
+        
+            if (repeated || message.fields.redelivered) {
+                this.logger.warn(logData, "Repeated activity message delivery");
+            } else {
+                this.logger.info(logData, "Activity message processed");
+            }
         }
     }
 }

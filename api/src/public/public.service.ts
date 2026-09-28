@@ -197,6 +197,15 @@ export class PublicService {
                 updatedAt: new Date(),
             }
         });
+
+        this.logger.info(
+            {
+                viewingId: viewing.id,
+                listingId,
+                clientId: viewing.clientId,
+            },
+            'Viewing created',
+        );
         
         try {
             this.publisherService.publish("viewing.booked", { viewingId: viewing.id }, { messageId: `viewing-booked:${viewing.id}` });

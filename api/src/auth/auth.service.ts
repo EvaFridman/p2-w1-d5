@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { PinoLogger } from 'nestjs-pino';
 import { UsersService } from '../users/users.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UnauthorizedError, ConflictError } from '../errors/app.exception.js';
@@ -17,12 +18,20 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly loginBlockService: LoginBlockService,
+        private readonly logger: PinoLogger,
     ) {}
 
     async login(email: string, password: string) {
         const blockTtl = await this.loginBlockService.getBlockTtl(email);
     
-        if (blockTtl > 0) throw new UnauthorizedError(`Too many failed login attempts. Try again in ${Math.ceil(blockTtl / 60)} minutes`);
+        if (blockTtl > 0) {
+            this.logger.warn(
+                { blocked: true },
+                'Login attempt blocked',
+            );
+            
+            throw new UnauthorizedError(`Too many failed login attempts. Try again in ${Math.ceil(blockTtl / 60)} minutes`);
+        }
     
         const user = await this.usersService.findByEmail(email);
     
@@ -37,6 +46,11 @@ export class AuthService {
         
         const { passwordHash: _passwordHash, ...publicUser } = user;
 
+        this.logger.info(
+            { userId: user.id },
+            'User logged in',
+        );
+    
         return { ...tokens, user: publicUser };
     }
 
