@@ -1,5 +1,6 @@
 import { Module, Injectable, ExecutionContext, Inject } from '@nestjs/common';
 import { createObserveModule } from '@nestjs/observe';
+import { randomUUID } from "crypto";
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AppExceptionFilter } from './common/filters/app-exception.filter.js';
@@ -142,6 +143,11 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
         transport: process.env.NODE_ENV !== "production" ? { target: "pino-pretty", options: { singleLine: true } } : undefined,
         redact: ["req.headers.authorization", "req.headers.cookie", "*.password", "*.passwordHash", "*.refreshToken"],
         autoLogging: true,
+        genReqId: (req, res) => {
+          const requestId = typeof req.headers["x-request-id"] === "string" ? req.headers["x-request-id"] : randomUUID();
+          res.setHeader("x-request-id", requestId);
+          return requestId;
+        },
       },
     }),
   ],

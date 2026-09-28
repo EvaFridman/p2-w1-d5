@@ -3,6 +3,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 
 import { getSession } from "../session";
+import { getRequestId } from "../request-id";
 import { sessions } from "../session/store";
 import { ApiError } from "./errors";
 
@@ -60,6 +61,8 @@ async function request<T>(path: string, options: RequestOptionsType = {}, isRetr
 
     if (process.env.NEXT_BUILD_SECRET) headers["X-Build-Request"] = process.env.NEXT_BUILD_SECRET;
 
+    if (!headers["x-request-id"]) headers["x-request-id"] = getRequestId();
+
     const session = options.skipAuth ? null : await getSession();
 
     if (session) headers["Authorization"] = `Bearer ${session.accessToken}`;
@@ -82,6 +85,7 @@ async function request<T>(path: string, options: RequestOptionsType = {}, isRetr
                 headers: {
                     "Content-Type": "application/json",
                     "Cookie": `refreshToken=${session.refreshToken}`,
+                    "x-request-id": headers["x-request-id"],
                 },
             });
 

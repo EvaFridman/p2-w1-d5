@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
-
+import { getRequestId } from "@/shared/request-id";
 import { sessions } from "./store";
 
 export const getSession = cache(async () => {
@@ -14,6 +14,7 @@ export const getSession = cache(async () => {
         const response = await fetch(`${process.env.API_URL}/auth/me`, {
             headers: {
                 Authorization: `Bearer ${session.accessToken}`,
+                "x-request-id": getRequestId(),
             },
             cache: "no-store",
         });
