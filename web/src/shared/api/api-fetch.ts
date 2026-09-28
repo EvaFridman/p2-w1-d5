@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import * as Sentry from "@sentry/nextjs";
 
 import { getSession } from "../session";
 import { getRequestId } from "../request-id";
@@ -62,6 +63,8 @@ async function request<T>(path: string, options: RequestOptionsType = {}, isRetr
     if (process.env.NEXT_BUILD_SECRET) headers["X-Build-Request"] = process.env.NEXT_BUILD_SECRET;
 
     if (!headers["x-request-id"]) headers["x-request-id"] = getRequestId();
+
+    Sentry.setTag("request_id", headers["x-request-id"]);
 
     const session = options.skipAuth ? null : await getSession();
 
