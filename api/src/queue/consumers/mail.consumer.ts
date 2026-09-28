@@ -1,6 +1,6 @@
-import { Injectable, Inject, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
+import { BeforeApplicationShutdown, Injectable, Inject, OnModuleInit } from "@nestjs/common";
 import type { Channel, ConsumeMessage } from "amqplib";
-import { PinoLogger } from 'nestjs-pino';
+import { PinoLogger } from "nestjs-pino";
 import { handleAgentDigest } from "./handlers/agent-digest.handler.js";
 import { handleListingExpired } from "./handlers/listing-expired.handler.js";
 import { handleNewViewing } from "./handlers/new-viewing.handler.js";
@@ -18,14 +18,15 @@ export type MailPayload = {
 };
 
 @Injectable()
-export class MailConsumer implements OnModuleInit, OnModuleDestroy {
+export class MailConsumer implements OnModuleInit, BeforeApplicationShutdown {
     private consumerTag?: string;
+    private processingPromise?: Promise<void>;
 
     constructor(
         @Inject("RABBITMQ_CHANNEL") private readonly channel: Channel,
         private readonly prisma: PrismaService,
         private readonly mailService: MailService,
-        private readonly logger: PinoLogger
+        private readonly logger: PinoLogger,
     ) {}
 
     async onModuleInit() {
@@ -33,14 +34,26 @@ export class MailConsumer implements OnModuleInit, OnModuleDestroy {
 
         const result = await this.channel.consume("mail", async (message) => {
             if (!message) return;
-            await this.handleMessage(message);
+
+            this.processingPromise = this.handleMessage(message);
+
+            try {
+                await this.processingPromise;
+            } finally {
+                this.processingPromise = undefined;
+            }
         });
 
         this.consumerTag = result.consumerTag;
     }
 
-    async onModuleDestroy() {
+    async beforeApplicationShutdown(signal?: string) {
+        this.logger.info({ signal }, "Mail consumer shutdown started");
+
         if (this.consumerTag) await this.channel.cancel(this.consumerTag);
+        if (this.processingPromise) await this.processingPromise;
+
+        this.logger.info({ signal }, "Mail consumer shutdown completed");
     }
 
     private async handleMessage(message: ConsumeMessage) {
@@ -54,44 +67,31 @@ export class MailConsumer implements OnModuleInit, OnModuleDestroy {
 
             if (routingKey === "listing.expired") {
                 result = await handleListingExpired(
-                    message,
                     payload,
                     this.prisma,
                     this.mailService,
-                    this.channel,
                 );
-                return;
-            }
-
-            if (routingKey === "viewing.reminder") {
+            } else if (routingKey === "viewing.reminder") {
                 result = await handleViewingReminder(
-                    message,
                     payload,
                     this.prisma,
                     this.mailService,
-                    this.channel,
                 );
-                return;
-            }
-
-            if (routingKey === "agent.digest") {
+            } else if (routingKey === "agent.digest") {
                 result = await handleAgentDigest(
-                    message,
                     payload,
                     this.prisma,
                     this.mailService,
-                    this.channel,
                 );
-                return;
+            } else {
+                result = await handleNewViewing(
+                    payload,
+                    this.prisma,
+                    this.mailService,
+                );
             }
 
-            result = await handleNewViewing(
-                message,
-                payload,
-                this.prisma,
-                this.mailService,
-                this.channel,
-            );
+            this.channel.ack(message);
         } catch {
             result = message.fields.redelivered ? "dead-lettered" : "retry";
             this.channel.nack(message, false, !message.fields.redelivered);
@@ -102,7 +102,7 @@ export class MailConsumer implements OnModuleInit, OnModuleDestroy {
                 result,
                 durationMs: Date.now() - startedAt,
             };
-        
+
             if (message.fields.redelivered) {
                 this.logger.warn(logData, "Repeated mail message delivery");
             } else if (result === "processed") {

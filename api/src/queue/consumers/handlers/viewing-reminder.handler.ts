@@ -1,16 +1,12 @@
-import type { Channel, ConsumeMessage } from "amqplib";
 import { ViewingStatus } from "../../../generated/prisma/index.js";
 import type { PrismaService } from "../../../prisma/prisma.service.js";
 import type { MailService } from "../../../mail/mail.service.js";
 import type { MailPayload } from "../mail.consumer.js";
 
-export async function handleViewingReminder(message: ConsumeMessage, payload: MailPayload, prisma: PrismaService, mailService: MailService, channel: Channel): Promise<string> {
+export async function handleViewingReminder(payload: MailPayload, prisma: PrismaService, mailService: MailService): Promise<string> {
     const viewingId = payload.viewingId;
 
-    if (!viewingId) {
-        channel.ack(message);
-        return "skipped";
-    }
+    if (!viewingId) return "skipped";
 
     const viewing = await prisma.viewings.findUnique({
         where: { id: viewingId },
@@ -18,7 +14,6 @@ export async function handleViewingReminder(message: ConsumeMessage, payload: Ma
     });
 
     if (!viewing || viewing.status !== ViewingStatus.APPROVED || viewing.reminderSentAt) {
-        channel.ack(message);
         return "skipped";
     }
 
@@ -29,6 +24,5 @@ export async function handleViewingReminder(message: ConsumeMessage, payload: Ma
         data: { reminderSentAt: new Date() },
     });
 
-    channel.ack(message);
     return "processed";
 }
