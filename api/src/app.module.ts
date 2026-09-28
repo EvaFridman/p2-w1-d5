@@ -140,14 +140,17 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     LoggerModule.forRoot({
       pinoHttp: {
         level: process.env.LOG_LEVEL ?? "info",
-        transport: process.env.NODE_ENV !== "production" ? { target: "pino-pretty", options: { singleLine: true } } : undefined,
+        transport: process.env.LOGDY !== "true" && process.env.NODE_ENV !== "production" ? { target: "pino-pretty", options: { singleLine: true } } : undefined,
         redact: ["req.headers.authorization", "req.headers.cookie", "*.password", "*.passwordHash", "*.refreshToken"],
         autoLogging: true,
         genReqId: (req, res) => {
-          const requestId = typeof req.headers["x-request-id"] === "string" ? req.headers["x-request-id"] : randomUUID();
-          res.setHeader("x-request-id", requestId);
-          return requestId;
+            const requestId = typeof req.headers["x-request-id"] === "string" ? req.headers["x-request-id"] : randomUUID();
+            res.setHeader("x-request-id", requestId);
+            return requestId;
         },
+        customProps: () => ({
+            process: process.env.LOG_PROCESS ?? "api",
+        }),
       },
     }),
   ],

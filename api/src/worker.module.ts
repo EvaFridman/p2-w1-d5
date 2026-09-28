@@ -18,9 +18,12 @@ import { RedisModule } from "./redis/redis.module.js";
         LoggerModule.forRoot({
             pinoHttp: {
                 level: process.env.LOG_LEVEL ?? "info",
-                transport: process.env.NODE_ENV !== "production" ? { target: "pino-pretty", options: { singleLine: true } } : undefined,
+                transport: process.env.LOGDY !== "true" && process.env.NODE_ENV !== "production" ? { target: "pino-pretty", options: { singleLine: true } } : undefined,
                 redact: ["req.headers.authorization", "req.headers.cookie", "*.password", "*.passwordHash", "*.refreshToken"],
                 autoLogging: true,
+                customProps: () => ({
+                    process: process.env.LOG_PROCESS ?? "queue-worker",
+                }),
             },
         }),
     ],
