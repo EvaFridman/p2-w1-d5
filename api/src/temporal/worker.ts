@@ -1,4 +1,5 @@
 import { NestFactory } from "@nestjs/core";
+import { Logger } from 'nestjs-pino';
 import { Worker } from "@temporalio/worker";
 import { TemporalWorkerModule } from "./temporal-worker.module.js";
 import { TaskRunnerService } from "../tasks/task-runner.service.js";
@@ -9,7 +10,9 @@ import { createDailyDigestActivities } from "./activities/daily-digest.activity.
 
 const TASK_QUEUE = "scheduled-tasks";
 
-const app = await NestFactory.createApplicationContext(TemporalWorkerModule);
+const app = await NestFactory.createApplicationContext(TemporalWorkerModule, { bufferLogs: true });
+
+app.useLogger(app.get(Logger));
 
 const taskRunner = app.get(TaskRunnerService);
 

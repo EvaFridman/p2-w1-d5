@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { LoggerModule } from 'nestjs-pino';
 import { FilesModule } from "../files/files.module.js";
 import { ListingsModule } from "../listings/listings.module.js";
 import { ViewingsModule } from "../viewings/viewings.module.js";
@@ -19,6 +20,14 @@ import { TasksModule } from "../tasks/tasks.module.js";
         QueueModule,
         ViewingsModule,
         TasksModule,
-        EventEmitterModule.forRoot()],
+        EventEmitterModule.forRoot(),
+        LoggerModule.forRoot({
+            pinoHttp: {
+                level: process.env.LOG_LEVEL ?? "info",
+                transport: process.env.NODE_ENV !== "production" ? { target: "pino-pretty", options: { singleLine: true } } : undefined,
+                redact: ["req.headers.authorization", "req.headers.cookie", "*.password", "*.passwordHash", "*.refreshToken"],
+                autoLogging: true,
+            },
+        }),],
 })
 export class TemporalWorkerModule {}

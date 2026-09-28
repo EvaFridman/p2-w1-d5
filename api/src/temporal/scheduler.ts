@@ -1,4 +1,10 @@
 import { Connection, Client } from "@temporalio/client";
+import pino from "pino";
+
+const logger = pino({
+    level: process.env.LOG_LEVEL ?? "info",
+    transport: process.env.NODE_ENV !== "production" ? { target: "pino-pretty", options: { singleLine: true } } : undefined,
+});
 
 const TASK_QUEUE = "scheduled-tasks";
 
@@ -44,10 +50,10 @@ try {
                 cronSchedule: workflow.cronSchedule,
             });
 
-            console.log(workflow.message);
+            logger.info({ workflowType: workflow.workflowType }, workflow.message);
         } catch (error) {
             if (error instanceof Error && error.name === "WorkflowExecutionAlreadyStartedError") {
-                console.log(`${workflow.workflowType} is already running`);
+                logger.info({ workflowType: workflow.workflowType }, "Workflow is already running");
             } else {
                 throw error;
             }

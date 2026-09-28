@@ -1,10 +1,13 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Injectable, Inject, ExecutionContext } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class WsThrottlerGuard extends ThrottlerGuard {
+  @Inject(PinoLogger)
+  private readonly logger: PinoLogger;
   protected async handleRequest(options: { context: ExecutionContext; limit: number; ttl: number; throttler: any; blockDuration: number }): Promise<boolean> {
     const { context, limit, ttl, throttler, blockDuration } = options;
     const socket = context.switchToWs().getClient<Socket>();
@@ -19,7 +22,7 @@ export class WsThrottlerGuard extends ThrottlerGuard {
 
   protected async throwThrottlerException(context: ExecutionContext): Promise<void> {
     const socket = context.switchToWs().getClient<Socket>();
-    console.warn(`[SECURITY] Сокет ${socket.id} превысил лимит событий через Throttler. Принудительное отключение.`);
+    this.logger.warn({ socketId: socket.id }, 'Socket rate limit exceeded');
     socket.disconnect(true);
     throw new WsException('Rate limit exceeded');
   }
