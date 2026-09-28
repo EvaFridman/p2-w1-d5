@@ -5,6 +5,6 @@ const { expireListingsActivity } = proxyActivities<ExpireListingsActivities>({
     startToCloseTimeout: "10 minutes",
 });
 
-export async function expireListingsWorkflow(): Promise<number | undefined> {
+export async function expireListingsWorkflow(): Promise<{ processed: number; errors: number } | undefined> {
     return expireListingsActivity();
 }

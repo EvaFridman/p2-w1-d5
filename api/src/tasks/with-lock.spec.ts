@@ -1,5 +1,5 @@
-import { Logger } from '@nestjs/common';
 import { jest } from '@jest/globals';
+import { PinoLogger } from 'nestjs-pino';
 import { withLock } from './with-lock.js';
 import { CacheService } from '../redis/cache.service.js';
 
@@ -20,9 +20,9 @@ describe('withLock', () => {
         } as unknown as CacheService;
 
         const logger = {
-            log: jest.fn(),
+            info: jest.fn(),
             error: jest.fn(),
-        } as unknown as Logger;
+        } as unknown as PinoLogger;
 
         const task = jest.fn<() => Promise<number>>();
         task.mockResolvedValue(1);

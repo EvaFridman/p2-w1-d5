@@ -1,14 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
+import { PinoLogger } from 'nestjs-pino';
 
 import { ListingPublishedEvent } from './listing-published.event.js';
 
 @Injectable()
 export class ListingPublishedListener {
-    private readonly logger = new Logger(ListingPublishedListener.name);
-
-    constructor(private readonly configService: ConfigService) {}
+    constructor(private readonly configService: ConfigService, private readonly logger: PinoLogger) {}
 
     @OnEvent(ListingPublishedEvent.eventName)
     async handle(event: ListingPublishedEvent) {
@@ -21,6 +20,8 @@ export class ListingPublishedListener {
         }
 
         try {
+            const startedAt = Date.now();
+
             const response = await fetch(`${webUrl}/api/revalidate`, {
                 method: 'POST',
                 headers: {
@@ -30,15 +31,46 @@ export class ListingPublishedListener {
                 body: JSON.stringify({ tag: 'listings' }),
             });
 
+            const durationMs = Date.now() - startedAt;
+
+            if (durationMs > 1000) {
+                this.logger.warn(
+                    {
+                        listingId: event.listingId,
+                        durationMs,
+                    },
+                    'Public site revalidation was slow',
+                );
+            }
+
             if (!response.ok) {
-                const body = await response.text();
-                this.logger.error(`Public site revalidation failed: ${response.status} ${body}`);
+                await response.text();
+            
+                this.logger.error(
+                    {
+                        listingId: event.listingId,
+                        status: response.status,
+                    },
+                    'Public site revalidation failed',
+                );
                 return;
             }
 
-            this.logger.log(`Public site cache revalidated after listing ${event.listingId} was published`);
+            this.logger.info(
+                {
+                    listingId: event.listingId,
+                    durationMs,
+                },
+                'Public site cache revalidated',
+            );
         } catch (error) {
-            this.logger.error(`Public site revalidation request failed: ${error instanceof Error ? error.message : String(error)}`);
+            this.logger.error(
+                {
+                    listingId: event.listingId,
+                    err: error,
+                },
+                'Public site revalidation request failed',
+            );
         }
     }
 }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { PinoLogger } from "nestjs-pino";
 import { FilesService } from "../files/files.service.js";
 import { ListingsService } from "../listings/listings.service.js";
 import { ViewingsService } from "../viewings/viewings.service.js";
@@ -17,8 +18,6 @@ export enum TaskName {
 
 @Injectable()
 export class TaskRunnerService {
-    private readonly logger = new Logger(TaskRunnerService.name);
-
     constructor(
         private readonly filesService: FilesService,
         private readonly listingsService: ListingsService,
@@ -26,6 +25,7 @@ export class TaskRunnerService {
         private readonly prisma: PrismaService,
         private readonly publisherService: PublisherService,
         private readonly cacheService: CacheService,
+        private readonly logger: PinoLogger
     ) {}
 
     async runCleanup() {

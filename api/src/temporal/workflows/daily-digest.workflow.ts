@@ -5,6 +5,6 @@ const { dailyDigestActivity } = proxyActivities<DailyDigestActivities>({
     startToCloseTimeout: "10 minutes",
 });
 
-export async function dailyDigestWorkflow(): Promise<number | undefined> {
+export async function dailyDigestWorkflow(): Promise<{ processed: number; errors: number } | undefined> {
     return dailyDigestActivity();
 }
