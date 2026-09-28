@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PublicListingsDto } from './dto/public-listings.dto.js';
 import { CreateViewingDto } from '../viewings/dto/create-viewing.dto.js';
@@ -18,7 +19,8 @@ export class PublicService {
         private readonly prisma: PrismaService,
         private readonly configService: ConfigService,
         private readonly cacheService: CacheService,
-        private readonly publisherService: PublisherService
+        private readonly publisherService: PublisherService,
+        private readonly logger: PinoLogger
     ) { }
 
     async findAllListings(dto: PublicListingsDto) {
@@ -199,7 +201,7 @@ export class PublicService {
         try {
             this.publisherService.publish("viewing.booked", { viewingId: viewing.id }, { messageId: `viewing-booked:${viewing.id}` });
         } catch (error) {
-            console.error(`Failed to publish viewing.booked: ${error instanceof Error ? error.message : String(error)}`);
+            this.logger.error({ err: error }, `Failed to publish viewing.booked`);
         }
         
         return viewing;

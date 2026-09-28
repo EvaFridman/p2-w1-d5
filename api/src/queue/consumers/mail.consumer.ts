@@ -1,5 +1,6 @@
 import { Injectable, Inject, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import type { Channel, ConsumeMessage } from "amqplib";
+import { PinoLogger } from 'nestjs-pino';
 import { handleAgentDigest } from "./handlers/agent-digest.handler.js";
 import { handleListingExpired } from "./handlers/listing-expired.handler.js";
 import { handleNewViewing } from "./handlers/new-viewing.handler.js";
@@ -24,6 +25,7 @@ export class MailConsumer implements OnModuleInit, OnModuleDestroy {
         @Inject("RABBITMQ_CHANNEL") private readonly channel: Channel,
         private readonly prisma: PrismaService,
         private readonly mailService: MailService,
+        private readonly logger: PinoLogger
     ) {}
 
     async onModuleInit() {
@@ -94,7 +96,15 @@ export class MailConsumer implements OnModuleInit, OnModuleDestroy {
             result = message.fields.redelivered ? "dead-lettered" : "retry";
             this.channel.nack(message, false, !message.fields.redelivered);
         } finally {
-            console.log(`[MAIL] routingKey=${routingKey} messageId=${messageId} result=${result} duration=${Date.now() - startedAt}ms`);
+            this.logger.info(
+                {
+                    routingKey,
+                    messageId,
+                    result,
+                    durationMs: Date.now() - startedAt,
+                },
+                "Mail message processed",
+            );
         }
     }
 }

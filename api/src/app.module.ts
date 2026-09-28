@@ -2,7 +2,9 @@ import { Module, Injectable, ExecutionContext, Inject } from '@nestjs/common';
 import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
+import { AppExceptionFilter } from './common/filters/app-exception.filter.js';
 import { ConfigModule } from '@nestjs/config';
+import { LoggerModule } from 'nestjs-pino';
 import { DistrictsModule } from './districts/districts.module.js';
 import { UsersModule } from './users/users.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -59,7 +61,7 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     const path = req.path || '';
 
     if (throttler.name === 'api' && (path === '/public/listings' || path === '/health')) return true;
-    
+
     if (url.includes('/socket.io')) return true;
 
     const buildSecret = process.env.NEXT_BUILD_SECRET;
@@ -134,9 +136,19 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     PublicModule,
     QueueModule,
     TasksModule,
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.LOG_LEVEL ?? "info",
+        transport: process.env.NODE_ENV !== "production" ? { target: "pino-pretty", options: { singleLine: true } } : undefined,
+        redact: ["req.headers.authorization", "req.headers.cookie", "*.password", "*.passwordHash", "*.refreshToken"],
+        autoLogging: true,
+      },
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppExceptionFilter,
+    AppService,
     PublicViewingRateLimitService,
     { provide: APP_GUARD, useClass: GlobalThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },

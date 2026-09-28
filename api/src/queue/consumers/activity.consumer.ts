@@ -1,11 +1,12 @@
 import { Injectable, Inject, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import type { Channel, ConsumeMessage } from "amqplib";
+import { PinoLogger } from 'nestjs-pino';
 import { CacheService } from "../../redis/cache.service.js";
 
 @Injectable()
 export class ActivityConsumer implements OnModuleInit, OnModuleDestroy {
     private consumerTag?: string;
-    constructor(@Inject("RABBITMQ_CHANNEL") private readonly channel: Channel, private readonly cacheService: CacheService) {}
+    constructor(@Inject("RABBITMQ_CHANNEL") private readonly channel: Channel, private readonly cacheService: CacheService, private readonly logger: PinoLogger) {}
 
     async onModuleInit() {
         await this.channel.prefetch(1);
@@ -62,7 +63,16 @@ export class ActivityConsumer implements OnModuleInit, OnModuleDestroy {
             result = message.fields.redelivered ? "dead-lettered" : "retry";
             this.channel.nack(message, false, !message.fields.redelivered);
         } finally {
-            console.log(`[ACTIVITY] routingKey=${routingKey} messageId=${messageId ?? "-"} result=${result} entityId=${entityId ?? "-"} duration=${Date.now() - startedAt}ms`);
+            this.logger.info(
+                {
+                    routingKey,
+                    messageId: messageId ?? "-",
+                    result,
+                    entityId: entityId ?? "-",
+                    durationMs: Date.now() - startedAt,
+                },
+                "Activity message processed",
+            );
         }
     }
 }

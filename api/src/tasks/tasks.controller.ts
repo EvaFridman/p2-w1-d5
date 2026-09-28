@@ -1,6 +1,6 @@
 import { BadRequestException, Controller, Param, Post } from "@nestjs/common";
 import { Roles } from "../auth/decorators/roles.decorator.js";
-import { TaskRunnerService, TASK_NAMES } from "./task-runner.service.js";
+import { TaskName, TaskRunnerService } from "./task-runner.service.js";
 
 @Controller("tasks")
 export class TasksController {
@@ -9,7 +9,7 @@ export class TasksController {
     @Roles("moderator")
     @Post(":name/run")
     async run(@Param("name") name: string) {
-        if (!TASK_NAMES.includes(name as typeof TASK_NAMES[number])) throw new BadRequestException(`Unknown task: ${name}`);
-        return this.taskRunnerService.run(name);
+        if (!Object.values(TaskName).includes(name as TaskName)) { throw new BadRequestException(`Unknown task: ${name}`) };
+        return this.taskRunnerService.run(name as TaskName);
     }
 }
