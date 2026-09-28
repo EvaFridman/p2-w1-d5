@@ -1,11 +1,13 @@
-import { Injectable, Inject, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
+import { BeforeApplicationShutdown, Injectable, Inject, OnModuleInit } from "@nestjs/common";
 import type { Channel, ConsumeMessage } from "amqplib";
-import { PinoLogger } from 'nestjs-pino';
+import { PinoLogger } from "nestjs-pino";
 import { CacheService } from "../../redis/cache.service.js";
 
 @Injectable()
-export class ActivityConsumer implements OnModuleInit, OnModuleDestroy {
+export class ActivityConsumer implements OnModuleInit, BeforeApplicationShutdown {
     private consumerTag?: string;
+    private processingPromise?: Promise<void>;
+
     constructor(@Inject("RABBITMQ_CHANNEL") private readonly channel: Channel, private readonly cacheService: CacheService, private readonly logger: PinoLogger) {}
 
     async onModuleInit() {
@@ -13,14 +15,26 @@ export class ActivityConsumer implements OnModuleInit, OnModuleDestroy {
 
         const result = await this.channel.consume("activity", async (message) => {
             if (!message) return;
-            await this.handleMessage(message);
+
+            this.processingPromise = this.handleMessage(message);
+
+            try {
+                await this.processingPromise;
+            } finally {
+                this.processingPromise = undefined;
+            }
         });
 
         this.consumerTag = result.consumerTag;
     }
 
-    async onModuleDestroy() {
+    async beforeApplicationShutdown(signal?: string) {
+        this.logger.info({ signal }, "Activity consumer shutdown started");
+
         if (this.consumerTag) await this.channel.cancel(this.consumerTag);
+        if (this.processingPromise) await this.processingPromise;
+
+        this.logger.info({ signal }, "Activity consumer shutdown completed");
     }
 
     private async handleMessage(message: ConsumeMessage) {
@@ -72,7 +86,7 @@ export class ActivityConsumer implements OnModuleInit, OnModuleDestroy {
                 entityId: entityId ?? "-",
                 durationMs: Date.now() - startedAt,
             };
-        
+
             if (repeated || message.fields.redelivered) {
                 this.logger.warn(logData, "Repeated activity message delivery");
             } else {

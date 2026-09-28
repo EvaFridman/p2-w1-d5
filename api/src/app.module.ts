@@ -15,7 +15,6 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from './auth/guards/roles.guard.js';
 import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module.js';
-import { PrismaService } from './prisma/prisma.service.js';
 import { ListingsModule } from './listings/listings.module.js';
 import { FavoritesModule } from './favorites/favorites.module.js';
 import { RealtimeModule } from './realtime/realtime.module.js';
@@ -60,8 +59,17 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     const req = context.switchToHttp().getRequest();
     const url = req.url || '';
     const path = req.path || '';
-
-    if (throttler.name === 'api' && (path === '/public/listings' || path === '/health')) return true;
+    
+    const handler = context.getHandler();
+    const classRef = context.getClass();
+    const skip = this.reflector.getAllAndOverride<boolean>(
+      `THROTTLER:SKIP${throttler.name}`,
+      [handler, classRef],
+    );
+    
+    if (skip) return true;
+    
+    if (throttler.name === 'api' && path === '/public/listings') return true;
 
     if (url.includes('/socket.io')) return true;
 
@@ -162,7 +170,6 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     { provide: APP_GUARD, useClass: GlobalThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
-    PrismaService,
     MailService,
     PdfService
   ],

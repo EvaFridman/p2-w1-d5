@@ -4,6 +4,7 @@ import amqp from "amqplib";
 import type { Channel, ChannelModel } from "amqplib";
 import { setupTopology } from "./topology.js";
 import { PublisherService } from "./publisher.service.js";
+import { PinoLogger } from "nestjs-pino";
 
 @Global()
 @Module({
@@ -32,10 +33,13 @@ export class QueueModule implements OnApplicationShutdown {
     constructor(
         @Inject("RABBITMQ_CONNECTION") private readonly connection: ChannelModel,
         @Inject("RABBITMQ_CHANNEL") private readonly channel: Channel,
+        private readonly logger: PinoLogger,
     ) {}
 
-    async onApplicationShutdown() {
+    async onApplicationShutdown(signal?: string) {
+        this.logger.info({ signal }, "RabbitMQ shutdown started");
         await this.channel.close();
         await this.connection.close();
+        this.logger.info({ signal }, "RabbitMQ shutdown completed");
     }
 }

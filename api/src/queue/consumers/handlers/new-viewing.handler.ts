@@ -1,15 +1,11 @@
-import type { Channel, ConsumeMessage } from "amqplib";
 import type { PrismaService } from "../../../prisma/prisma.service.js";
 import type { MailService } from "../../../mail/mail.service.js";
 import type { MailPayload } from "../mail.consumer.js";
 
-export async function handleNewViewing(message: ConsumeMessage, payload: MailPayload, prisma: PrismaService, mailService: MailService, channel: Channel): Promise<string> {
+export async function handleNewViewing(payload: MailPayload, prisma: PrismaService, mailService: MailService): Promise<string> {
     const viewingId = payload.viewingId;
 
-    if (!viewingId) {
-        channel.ack(message);
-        return "skipped";
-    }
+    if (!viewingId) return "skipped";
 
     const viewing = await prisma.viewings.findUnique({
         where: { id: viewingId },
@@ -24,10 +20,7 @@ export async function handleNewViewing(message: ConsumeMessage, payload: MailPay
         },
     });
 
-    if (!viewing || viewing.notifiedAt) {
-        channel.ack(message);
-        return "skipped";
-    }
+    if (!viewing || viewing.notifiedAt) return "skipped";
 
     await mailService.sendNewViewingNotice(viewing.listing, viewing);
 
@@ -36,6 +29,5 @@ export async function handleNewViewing(message: ConsumeMessage, payload: MailPay
         data: { notifiedAt: new Date() },
     });
 
-    channel.ack(message);
     return "processed";
 }
