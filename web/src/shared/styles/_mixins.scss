@@ -1,0 +1,25 @@
+@use "sass:map";
+@use "variables" as v;
+
+@mixin from($name) {
+  $width: map.get(v.$breakpoints, $name);
+  
+  @media (min-width: $width) {
+    @content;
+  }
+}
+
+@mixin upto($name) {
+  $width: map.get(v.$breakpoints, $name);
+  
+  @media (max-width: ($width - 1px)) {
+    @content;
+  }
+}
+
+@mixin line-clamp($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

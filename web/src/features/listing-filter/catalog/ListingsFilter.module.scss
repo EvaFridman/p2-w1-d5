@@ -8,6 +8,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     background-color: var(--color-surface);
+    @include s.from(tablet) { padding: var(--space-4); }
 }
 
 .header {
@@ -27,10 +28,7 @@
     background: transparent;
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
-}
-
-.reset:hover {
-    color: var(--color-text);
+    &:hover { color: var(--color-text); }
 }
 
 .fieldset {
@@ -63,7 +61,8 @@
     color: var(--color-text);
 }
 
-.dealActive {
+.dealActive,
+.roomActive {
     border-color: var(--color-primary);
     background-color: var(--color-primary);
     color: var(--color-primary-text);
@@ -101,15 +100,11 @@
     background-color: var(--color-surface);
     color: var(--color-text);
     font-size: var(--font-size-sm);
+    &::placeholder { color: var(--color-text-muted); }
 }
 
 .searchInput {
     padding-inline: var(--space-3);
-}
-
-.searchInput::placeholder,
-.range input::placeholder {
-    color: var(--color-text-muted);
 }
 
 .districts {
@@ -168,12 +163,6 @@
     pointer-events: none;
 }
 
-.roomActive {
-    border-color: var(--color-primary);
-    background-color: var(--color-primary);
-    color: var(--color-primary-text);
-}
-
 .submit {
     min-height: 48px;
     margin-top: var(--space-1);
@@ -184,18 +173,6 @@
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
     transition: background-color var(--transition-fast);
-}
-
-.submit:hover {
-    background-color: var(--color-primary-hover);
-}
-
-.submit:active {
-    background-color: var(--color-primary-active);
-}
-
-@media (max-width: 767px) {
-    .panel {
-        padding: var(--space-4);
-    }
+    &:hover { background-color: var(--color-primary-hover); }
+    &:active { background-color: var(--color-primary-active); }
 }
