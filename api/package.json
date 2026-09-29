@@ -28,7 +28,8 @@
     "test:watch": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config test/jest-e2e.json"
+    "test:e2e": "jest --config test/jest-e2e.json",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nest-lab/throttler-storage-redis": "^1.2.0",

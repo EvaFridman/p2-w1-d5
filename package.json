@@ -4,7 +4,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:api": "eslint api/",
-    "lint:web": "eslint web/"
+    "lint:web": "eslint web/",
+    "prepare": "git config core.hooksPath .githooks",
+    "typecheck": "npm --prefix api run typecheck && npm --prefix web run typecheck",
+    "test:api": "npm --prefix api run test"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
@@ -18,5 +21,19 @@
     "stylelint-config-clean-order": "^10.0.0",
     "stylelint-config-standard-scss": "^17.0.0",
     "typescript-eslint": "^8.71.0"
+  },
+  "lint-staged": {
+    "api/src/**/*.{ts,js}": [
+      "eslint --fix"
+    ],
+    "web/src/**/*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ],
+    "web/src/**/*.{css,scss}": [
+      "stylelint --fix"
+    ],
+    "**/*.{ts,tsx,js,jsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
   }
 }
