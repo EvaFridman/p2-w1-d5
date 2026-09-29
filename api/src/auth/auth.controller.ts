@@ -127,7 +127,9 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Токен отсутствует или невалиден' })
   @Get('me')
   async me(@Req() request: Request) {
-    return this.authService.getCurrentUser((request.user as any).id);
+    const userId = request.user?.id;
+    if (!userId) throw new Error('User not found in request context');
+    return this.authService.getCurrentUser(userId);
   }
 
   @ApiBearerAuth('bearer')
@@ -146,8 +148,10 @@ export class AuthController {
     @Body() dto: ChangePasswordDto,
     @Req() request: Request,
   ) {
+    const userId = request.user?.id;
+    if (!userId) throw new Error('User not found in request context');
     return await this.authService.changePassword(
-      (request.user as any).id,
+      userId,
       dto.currentPassword,
       dto.newPassword,
     );

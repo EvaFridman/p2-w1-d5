@@ -26,7 +26,7 @@ export class ViewingsService {
     private readonly logger: PinoLogger,
   ) {}
 
-  private handlePrismaError(error: any) {
+  private handlePrismaError(error: unknown): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2025') {
         throw new NotFoundError('Viewing not found');
@@ -74,8 +74,8 @@ export class ViewingsService {
     let finalLimit = !dto.limit || dto.limit < 1 ? pageSizeDefault : dto.limit;
     if (finalLimit > pageSizeMax) finalLimit = pageSizeMax;
 
-    const whereCondition: any = {};
-    if (dto.status) whereCondition.status = dto.status.toUpperCase();
+    const whereCondition: Prisma.ViewingsWhereInput = {};
+    if (dto.status) whereCondition.status = dto.status.toUpperCase() as ViewingStatus;
     if (dto.listingId) whereCondition.listingId = dto.listingId;
 
     if (user.role === UserRole.agent)
@@ -170,11 +170,14 @@ export class ViewingsService {
           const allowed = getAllowedTransitions(viewing.status).join(', ');
           throw new ConflictError(
             `Transition from ${viewing.status} to ${dto.status} is not allowed`,
-            allowed as any,
+            [allowed],
           );
         }
 
-        const updateData: any = { status: dto.status, updatedAt: new Date() };
+        const updateData: Prisma.ViewingsUpdateInput = { 
+          status: dto.status, 
+          updatedAt: new Date() 
+        };
         const triggerStatuses: ViewingStatus[] = [
           ViewingStatus.APPROVED,
           ViewingStatus.REJECTED,

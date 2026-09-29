@@ -1,4 +1,4 @@
-import { Prisma } from '../generated/prisma/index.js';
+import { Prisma, ListingStatus } from '../generated/prisma/index.js';
 import { ListListingsDto } from './dto/list-listings.dto.js';
 
 export function buildListingsWhere(
@@ -16,7 +16,7 @@ export function buildListingsWhere(
 
   if (dto.dealType) where.dealType = dto.dealType;
   if (dto.propertyType) where.propertyType = dto.propertyType;
-  if (dto.status) where.status = dto.status.toUpperCase() as any;
+  if (dto.status) where.status = dto.status.toUpperCase() as ListingStatus;
 
   if (dto.rooms && dto.rooms.length > 0) where.rooms = { in: dto.rooms };
 

@@ -50,10 +50,11 @@ export class FavoritesController {
     @Param('listingId', ParseIntPipe) listingId: number,
     @Req() request: Request,
   ) {
+    if (!request.user) throw new Error('User context is missing in request');
     return await this.favoritesService.add(
       userId,
       listingId,
-      request.user as any,
+      request.user,
     );
   }
 
@@ -78,10 +79,11 @@ export class FavoritesController {
     @Param('listingId', ParseIntPipe) listingId: number,
     @Req() request: Request,
   ) {
+    if (!request.user) throw new Error('User context is missing in request');
     return await this.favoritesService.remove(
       userId,
       listingId,
-      request.user as any,
+      request.user,
     );
   }
 
@@ -105,10 +107,11 @@ export class FavoritesController {
     @Query() query: ListFavoritesDto,
     @Req() request: Request,
   ) {
+    if (!request.user) throw new Error('User context is missing in request');
     return await this.favoritesService.findAll(
       userId,
       query,
-      request.user as any,
+      request.user,
     );
   }
 }

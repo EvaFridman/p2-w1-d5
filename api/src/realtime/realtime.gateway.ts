@@ -58,7 +58,7 @@ export class RealtimeGateway
 
   afterInit(server: Server) {
     const io = server as unknown as AppServer;
-    io.use(async (socket: any, next) => {
+    io.use(async (socket: AppSocket, next) => {
       try {
         const token =
           socket.handshake.auth?.token || socket.handshake.query?.token;

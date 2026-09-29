@@ -48,7 +48,7 @@ export class ListingsController {
   constructor(
     private readonly listingsService: ListingsService,
     private readonly viewingsService: ViewingsService,
-  ) {}
+  ) { }
 
   @ApiOperation({
     summary: 'Получить список объявлений с фильтрацией и пагинацией',
@@ -131,7 +131,8 @@ export class ListingsController {
     @Param('id', ParseIntPipe) id: number,
     @Req() request: Request,
   ) {
-    return await this.listingsService.findOne(id, request.user as any);
+    if (!request.user) throw new Error('User context is missing');
+    return await this.listingsService.findOne(id, request.user);
   }
 
   @ApiOperation({
@@ -176,7 +177,8 @@ export class ListingsController {
     @Body() dto: UpdateListingDto,
     @Req() request: Request,
   ) {
-    return await this.listingsService.update(id, dto, request.user as any);
+    if (!request.user) throw new Error('User context is missing');
+    return await this.listingsService.update(id, dto, request.user);
   }
 
   @ApiOperation({
@@ -350,9 +352,10 @@ export class ListingsController {
   async getListingPdf(
     @Param('id', ParseIntPipe) id: number,
     @Query() query: PdfQueryDto,
-    @Req() request: any,
+    @Req() request: Request,
     @Response({ passthrough: true }) res: ExpressResponse,
   ): Promise<StreamableFile> {
+    if (!request.user) throw new Error('User context is missing');
     const pdfStream = await this.listingsService.getListingPdfStream(
       id,
       request.user,

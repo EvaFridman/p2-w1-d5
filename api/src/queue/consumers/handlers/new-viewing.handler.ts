@@ -1,6 +1,7 @@
 import type { PrismaService } from '../../../prisma/prisma.service.js';
 import type { MailService } from '../../../mail/mail.service.js';
 import type { MailPayload } from '../mail.consumer.js';
+import type { ListingMailPayload, ViewingMailPayload } from '../../../mail/mail.service.js';
 
 export async function handleNewViewing(
   payload: MailPayload,
@@ -26,7 +27,12 @@ export async function handleNewViewing(
 
   if (!viewing || viewing.notifiedAt) return 'skipped';
 
-  await mailService.sendNewViewingNotice(viewing.listing, viewing);
+  if (!viewing.listing) return 'skipped';
+
+  await mailService.sendNewViewingNotice(
+    viewing.listing as unknown as ListingMailPayload,
+    viewing as unknown as ViewingMailPayload,
+  );
 
   await prisma.viewings.update({
     where: { id: viewing.id },

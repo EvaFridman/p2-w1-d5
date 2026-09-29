@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { FilesService } from './files.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import fs from 'fs/promises';
+import { Dirent, Stats } from 'fs';
 import path from 'path';
 import {
   jest,
@@ -44,12 +45,20 @@ describe('FilesService', () => {
     const oldFileTime = now - 25 * 60 * 60 * 1000;
 
     jest.spyOn(Date, 'now').mockReturnValue(now);
-    (jest.spyOn(prisma.listingPhotos, 'findMany') as any).mockResolvedValue([]);
-    (jest.spyOn(fs, 'readdir') as any).mockResolvedValue([
-      { name: 'orphan.jpg', isFile: () => true },
+    
+    const mockFindMany = prisma.listingPhotos.findMany as unknown as ReturnType<typeof jest.fn>;
+    mockFindMany.mockResolvedValue([]);
+
+    jest.spyOn(fs, 'readdir');
+    jest.mocked(fs.readdir).mockResolvedValue([
+      { name: 'orphan.jpg', isFile: () => true } as Dirent,
     ]);
-    (jest.spyOn(fs, 'stat') as any).mockResolvedValue({ mtimeMs: oldFileTime });
-    (jest.spyOn(fs, 'unlink') as any).mockResolvedValue(undefined);
+
+    jest.spyOn(fs, 'stat');
+    jest.mocked(fs.stat).mockResolvedValue({ mtimeMs: oldFileTime } as Stats);
+
+    jest.spyOn(fs, 'unlink');
+    jest.mocked(fs.unlink).mockResolvedValue(undefined);
 
     const result = await service.removeOrphaned();
 
@@ -64,14 +73,22 @@ describe('FilesService', () => {
     const oldFileTime = now - 25 * 60 * 60 * 1000;
 
     jest.spyOn(Date, 'now').mockReturnValue(now);
-    (jest.spyOn(prisma.listingPhotos, 'findMany') as any).mockResolvedValue([
+
+    const mockFindMany = prisma.listingPhotos.findMany as unknown as ReturnType<typeof jest.fn>;
+    mockFindMany.mockResolvedValue([
       { fileName: 'attached.jpg' },
     ]);
-    (jest.spyOn(fs, 'readdir') as any).mockResolvedValue([
-      { name: 'attached.jpg', isFile: () => true },
+
+    jest.spyOn(fs, 'readdir');
+    jest.mocked(fs.readdir).mockResolvedValue([
+      { name: 'attached.jpg', isFile: () => true } as Dirent,
     ]);
-    (jest.spyOn(fs, 'stat') as any).mockResolvedValue({ mtimeMs: oldFileTime });
-    (jest.spyOn(fs, 'unlink') as any).mockResolvedValue(undefined);
+
+    jest.spyOn(fs, 'stat');
+    jest.mocked(fs.stat).mockResolvedValue({ mtimeMs: oldFileTime } as Stats);
+
+    jest.spyOn(fs, 'unlink');
+    jest.mocked(fs.unlink).mockResolvedValue(undefined);
 
     const result = await service.removeOrphaned();
 
@@ -84,12 +101,20 @@ describe('FilesService', () => {
     const newFileTime = now - 23 * 60 * 60 * 1000;
 
     jest.spyOn(Date, 'now').mockReturnValue(now);
-    (jest.spyOn(prisma.listingPhotos, 'findMany') as any).mockResolvedValue([]);
-    (jest.spyOn(fs, 'readdir') as any).mockResolvedValue([
-      { name: 'new-orphan.jpg', isFile: () => true },
+
+    const mockFindMany = prisma.listingPhotos.findMany as unknown as ReturnType<typeof jest.fn>;
+    mockFindMany.mockResolvedValue([]);
+
+    jest.spyOn(fs, 'readdir');
+    jest.mocked(fs.readdir).mockResolvedValue([
+      { name: 'new-orphan.jpg', isFile: () => true } as Dirent,
     ]);
-    (jest.spyOn(fs, 'stat') as any).mockResolvedValue({ mtimeMs: newFileTime });
-    (jest.spyOn(fs, 'unlink') as any).mockResolvedValue(undefined);
+
+    jest.spyOn(fs, 'stat');
+    jest.mocked(fs.stat).mockResolvedValue({ mtimeMs: newFileTime } as Stats);
+
+    jest.spyOn(fs, 'unlink');
+    jest.mocked(fs.unlink).mockResolvedValue(undefined);
 
     const result = await service.removeOrphaned();
 

@@ -15,7 +15,7 @@ export class UsersService {
     private readonly configService: ConfigService,
   ) {}
 
-  private formatPublicUser(user: any): PublicUser {
+  private formatPublicUser(user: User): PublicUser {
     const { passwordHash: _passwordHash, ...publicUser } = user;
 
     const baseUrl = this.configService.get<string>('PUBLIC_URL');

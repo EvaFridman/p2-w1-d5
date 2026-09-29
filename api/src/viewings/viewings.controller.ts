@@ -39,7 +39,8 @@ export class ViewingsController {
   @ApiResponse({ status: 401, description: 'Токен отсутствует или невалидный' })
   @Get('viewings')
   async findAll(@Query() query: ListViewingsDto, @Req() request: Request) {
-    return await this.viewingsService.findAll(query, request.user as any);
+    if (!request.user) throw new Error('User context is missing');
+    return await this.viewingsService.findAll(query, request.user);
   }
 
   @ApiBearerAuth('bearer')
@@ -59,7 +60,8 @@ export class ViewingsController {
     @Param('id', ParseIntPipe) id: number,
     @Req() request: Request,
   ) {
-    return await this.viewingsService.findOne(id, request.user as any);
+    if (!request.user) throw new Error('User context is missing');
+    return await this.viewingsService.findOne(id, request.user);
   }
 
   @ApiOperation({ summary: 'Создать новую заявку на показ для объявления' })
@@ -103,10 +105,11 @@ export class ViewingsController {
     @Body() dto: UpdateStatusDto,
     @Req() request: Request,
   ) {
+    if (!request.user) throw new Error('User context is missing');
     return await this.viewingsService.updateStatus(
       id,
       dto,
-      request.user as any,
+      request.user,
     );
   }
 }
