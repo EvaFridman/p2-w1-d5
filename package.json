@@ -21,19 +21,5 @@
     "stylelint-config-clean-order": "^10.0.0",
     "stylelint-config-standard-scss": "^17.0.0",
     "typescript-eslint": "^8.71.0"
-  },
-  "lint-staged": {
-    "api/src/**/*.{ts,js}": [
-      "eslint --fix"
-    ],
-    "web/src/**/*.{ts,tsx,js,jsx}": [
-      "eslint --fix"
-    ],
-    "web/src/**/*.{css,scss}": [
-      "stylelint --fix"
-    ],
-    "**/*.{ts,tsx,js,jsx,json,css,scss,md}": [
-      "prettier --write"
-    ]
   }
 }
