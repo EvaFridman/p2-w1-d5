@@ -111,6 +111,9 @@
     "extensionsToTreatAsEsm": [
       ".ts"
     ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": [
         "ts-jest",
@@ -128,7 +131,6 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@nestjs/throttler$": "<rootDir>/node_modules/@nestjs/throttler/dist/index.js",
       "^(\\..*)\\.js$": "$1"
     }
   }
