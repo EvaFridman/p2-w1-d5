@@ -154,7 +154,9 @@ export class PublicService {
         try {
           await this.cacheService.set(cacheKey, result, 300);
           await this.cacheService.addToTag('listings', cacheKey);
-        } catch {}
+        } catch {
+          // Игнорируем ошибки записи в кэш, чтобы не ломать выдачу пользователю
+        }
       }
 
       return result;
@@ -162,7 +164,9 @@ export class PublicService {
       if (hasLock) {
         try {
           await this.cacheService.releaseLock(cacheKey);
-        } catch {}
+        } catch {
+          // Игнорируем ошибки освобождения блокировки в Redis
+        }
       }
     }
   }
@@ -202,8 +206,7 @@ export class PublicService {
     if (!listing || listing.status !== ListingStatus.PUBLISHED)
       throw new NotFoundError('Listing not found');
 
-    const publicListing = { ...listing };
-    delete (publicListing as any).status;
+    const { status: _status, ...publicListing } = listing;
 
     return publicListing;
   }

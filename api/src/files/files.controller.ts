@@ -83,15 +83,15 @@ export class FilesController {
         const fullUser = await this.prisma.users.findUnique({
           where: { id: Number(payload.sub) },
         });
-        if (!fullUser)
-          throw new UnauthorizedError('User from token not found in database');
-        const { _passwordHash, ...publicUser } = fullUser as any;
+        if (!fullUser) throw new UnauthorizedError('User from token not found in database');
+        const { passwordHash: _passwordHash, ...publicUser } = fullUser;
         res.req.user = publicUser;
       } catch {
         throw new UnauthorizedError('Invalid or expired token');
       }
 
-      const user = res.req.user as { id: number; role: string };
+      const user = res.req.user;
+      if (!user) throw new UnauthorizedError('User context is empty');
       if (user.role !== 'moderator') {
         const listing = await this.prisma.listings.findUnique({
           where: { id: photo.listingId },

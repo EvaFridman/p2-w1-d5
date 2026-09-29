@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer'; // Импортировали тип Transporter
 import type { SendMailOptions } from 'nodemailer/lib/mailer/index.js';
 import { PassThrough } from 'stream';
 import { PinoLogger } from 'nestjs-pino';
@@ -13,9 +13,41 @@ import { PdfService } from '../pdf/pdf.service.js';
 
 type MailOptions = SendMailOptions;
 
+export type UserMailPayload = {
+  email: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+export type ListingMailPayload = {
+  id: number;
+  title: string;
+  price: number | string;
+  area: number | string;
+  address: string;
+  description?: string | null;
+  agent?: UserMailPayload;
+  [key: string]: unknown;
+}
+
+export type ViewingMailPayload = {
+  clientName: string;
+  clientPhone: string;
+  clientEmail: string;
+  preferredAt: string  | Date;
+  listing?: ListingMailPayload;
+  [key: string]: unknown;
+}
+
+export type DigestStatusChange = {
+  listing: { id: number; title: string };
+  fromStatus: string;
+  toStatus: string;
+}
+
 @Injectable()
 export class MailService {
-  private transporter: any;
+  private transporter: Transporter;
 
   constructor(
     private readonly configService: ConfigService,
@@ -42,18 +74,18 @@ export class MailService {
       this.transporter = nodemailer.createTransport({
         streamTransport: true,
         buffer: true,
-      });
+      }) as unknown as Transporter;
     } else {
       this.transporter = {
         sendMail: async (options: MailOptions) => ({
           messageId: 'mocked',
           envelope: options,
         }),
-      };
+      } as unknown as Transporter;
     }
   }
 
-  async renderListingCardBuffer(listing: any): Promise<Buffer> {
+  async renderListingCardBuffer(listing: ListingMailPayload): Promise<Buffer> {
     const stream = new PassThrough();
     const chunks: Buffer[] = [];
     stream.on('data', (chunk: Buffer) => chunks.push(chunk));
@@ -69,7 +101,7 @@ export class MailService {
     return Buffer.concat(chunks);
   }
 
-  async sendMailSafely(options: MailOptions): Promise<any> {
+  async sendMailSafely(options: MailOptions): Promise<unknown> {
     try {
       const from =
         this.configService.get<string>('MAIL_FROM') ??
@@ -89,12 +121,12 @@ export class MailService {
     });
     if (!agent || !agent.email) return;
 
-    const info = await this.sendMailSafely({
+    const info = (await this.sendMailSafely({
       to: agent.email,
       subject: `Ваше объявление "${event.title}" успешно опубликовано!`,
       text: `Здравствуйте, ${agent.name}! Объявление #${event.listingId} успешно опубликовано.`,
       html: `<h1>${escapeHtml(event.title)}</h1><p>Здравствуйте, ${escapeHtml(agent.name)}! Объявление #${event.listingId} успешно опубликовано.</p>`,
-    });
+    })) as Record<string, unknown> | null;
 
     const transportType =
       this.configService.get<string>('MAIL_TRANSPORT') ?? 'stream';
@@ -103,7 +135,7 @@ export class MailService {
     }
   }
 
-  async sendNewViewingNotice(listing: any, viewing: any): Promise<any> {
+  async sendNewViewingNotice(listing: ListingMailPayload, viewing: ViewingMailPayload): Promise<unknown> {
     if (!listing.agent)
       throw new ExternalServiceError('Listing agent is not loaded');
     const pdfBuffer = await this.renderListingCardBuffer(listing);
@@ -120,10 +152,10 @@ export class MailService {
   }
 
   async sendListingExpiredNotice(
-    agent: any,
+    agent: UserMailPayload,
     listingId: number,
     title: string,
-  ): Promise<any> {
+  ): Promise<unknown> {
     return this.sendMailSafely({
       to: agent.email,
       subject: `Объявление "${title}" снято с публикации`,
@@ -132,7 +164,7 @@ export class MailService {
     });
   }
 
-  async sendViewingConfirmation(listing: any, viewing: any): Promise<any> {
+  async sendViewingConfirmation(listing: ListingMailPayload, viewing: ViewingMailPayload): Promise<unknown> {
     return this.sendMailSafely({
       to: viewing.clientEmail,
       subject: 'Просмотр подтверждён',
@@ -141,7 +173,7 @@ export class MailService {
     });
   }
 
-  async sendViewingReminder(viewing: any): Promise<any> {
+  async sendViewingReminder(viewing: ViewingMailPayload): Promise<unknown> {
     if (!viewing.listing)
       throw new ExternalServiceError('Viewing listing is not loaded');
 
@@ -154,14 +186,14 @@ export class MailService {
   }
 
   async sendAgentDigest(
-    agent: any,
+    agent: UserMailPayload,
     period: { from: Date; to: Date },
-    viewings: any[],
-    statusChanges: any[],
-  ): Promise<any> {
+    viewings: ViewingMailPayload[],
+    statusChanges: DigestStatusChange[],
+  ): Promise<unknown> {
     const viewingText = viewings.map(
       (viewing) =>
-        `- Объявление #${viewing.listing.id} "${viewing.listing.title}": заявка от ${viewing.clientName} (${viewing.clientPhone}), желаемое время ${viewing.preferredAt}`,
+        `- Объявление #${viewing.listing?.id ?? 0} "${viewing.listing?.title ?? ''}": заявка от ${viewing.clientName} (${viewing.clientPhone}), желаемое время ${viewing.preferredAt.toString()}`,
     );
     const statusText = statusChanges.map(
       (change) =>
@@ -170,7 +202,7 @@ export class MailService {
     const viewingHtml = viewings
       .map(
         (viewing) =>
-          `<li>Объявление #${viewing.listing.id} "${escapeHtml(viewing.listing.title)}": заявка от ${escapeHtml(viewing.clientName)} (${escapeHtml(viewing.clientPhone)}), желаемое время ${escapeHtml(viewing.preferredAt)}</li>`,
+          `<li>Объявление #${viewing.listing?.id ?? 0} "${escapeHtml(viewing.listing?.title ?? '')}": заявка от ${escapeHtml(viewing.clientName)} (${escapeHtml(viewing.clientPhone)}), желаемое время ${escapeHtml(viewing.preferredAt.toString())}</li>`,
       )
       .join('');
     const statusHtml = statusChanges

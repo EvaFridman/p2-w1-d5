@@ -1,5 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import type { UserRole } from '../generated/prisma/index.js';
+import type { ListingPublishedEvent } from '../listings/events/listing-published.event.js';
 
 export type SocketUser = {
   id: number;
@@ -23,7 +24,7 @@ export type ServerToClientEvents = {
   'presence:room': (users: SocketUser[]) => void;
   'cursor:moved': (payload: { userId: number; x: number; y: number }) => void;
   'pong:check': () => void;
-  'listing:updated': (event: any) => void;
+  'listing:updated': (event: ListingPublishedEvent) => void;
   'queue:changed': (payload: { listingId: number }) => void;
 };
 

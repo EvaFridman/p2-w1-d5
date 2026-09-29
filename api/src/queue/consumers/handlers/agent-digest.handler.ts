@@ -1,6 +1,7 @@
 import type { PrismaService } from '../../../prisma/prisma.service.js';
 import type { MailService } from '../../../mail/mail.service.js';
 import type { MailPayload } from '../mail.consumer.js';
+import type { UserMailPayload, ViewingMailPayload, DigestStatusChange } from '../../../mail/mail.service.js';
 
 export async function handleAgentDigest(
   payload: MailPayload,
@@ -63,11 +64,15 @@ export async function handleAgentDigest(
 
   if (viewings.length === 0 && statusChanges.length === 0) return 'skipped';
 
+  const validStatusChanges = statusChanges.filter(
+    (change) => change.listing !== null,
+  ) as unknown as DigestStatusChange[];
+
   await mailService.sendAgentDigest(
-    agent,
+    agent as unknown as UserMailPayload,
     { from, to },
-    viewings,
-    statusChanges,
+    viewings as unknown as ViewingMailPayload[],
+    validStatusChanges,
   );
 
   return 'processed';

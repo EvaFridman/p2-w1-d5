@@ -17,7 +17,7 @@ import {
   ConflictError,
   ForbiddenError,
 } from '../errors/app.exception.js';
-import { UserRole, ListingStatus, Prisma } from '../generated/prisma/index.js';
+import { UserRole, ListingStatus, Prisma, Listings } from '../generated/prisma/index.js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ListingPublishedEvent } from './events/listing-published.event.js';
 import path from 'path';
@@ -35,17 +35,17 @@ export class ListingsService {
     private readonly pdfService: PdfService,
     private readonly publisherService: PublisherService,
     private readonly logger: PinoLogger,
-  ) {}
+  ) { }
 
-  private handlePrismaError(error: any) {
+  private handlePrismaError(error: unknown): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2025') throw new NotFoundError('Listing not found');
       if (error.code === 'P2002') {
-        const constraintName =
-          (error.meta?.target as string[])?.join('_') || 'constraint';
+        const targetArray = error.meta?.target as string[] | undefined;
+        const constraintName = targetArray?.join('_') || 'constraint';
         throw new ConflictError(
           `Unique constraint failed on ${constraintName}`,
-          constraintName as any,
+          [constraintName],
         );
       }
     }
@@ -94,7 +94,7 @@ export class ListingsService {
     };
   }
 
-  async create(dto: CreateListingDto, agentId: number): Promise<any> {
+  async create(dto: CreateListingDto, agentId: number): Promise<Listings> {
     try {
       const { districtId, ...restDto } = dto;
       return await this.prisma.listings.create({
@@ -108,7 +108,7 @@ export class ListingsService {
         },
       });
     } catch (error) {
-      this.handlePrismaError(error);
+      return this.handlePrismaError(error);
     }
   }
 
@@ -137,7 +137,7 @@ export class ListingsService {
     id: number,
     dto: UpdateListingDto,
     user: { id: number; role: string },
-  ): Promise<any> {
+  ): Promise<Listings> {
     await this.findOne(id, user);
     try {
       return await this.prisma.listings.update({
@@ -145,14 +145,14 @@ export class ListingsService {
         data: { ...dto, updatedAt: new Date() },
       });
     } catch (error) {
-      this.handlePrismaError(error);
+      return this.handlePrismaError(error);
     }
   }
 
   async expireOldListings(): Promise<{ processed: number; errors: number }> {
     const cutoff = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 
-    const listings = await this.prisma.listings.findMany({
+    const listingsList = await this.prisma.listings.findMany({
       where: {
         status: ListingStatus.PUBLISHED,
         publishedAt: { lte: cutoff },
@@ -163,7 +163,7 @@ export class ListingsService {
     let processed = 0;
     let errors = 0;
 
-    for (const listing of listings) {
+    for (const listing of listingsList) {
       try {
         await this.updateStatus(
           listing.id,
@@ -183,7 +183,7 @@ export class ListingsService {
     id: number,
     dto: UpdateStatusDto,
     options?: { expired?: boolean },
-  ): Promise<any> {
+  ): Promise<unknown> {
     try {
       const updatedListing = await this.prisma.$transaction(async (tx) => {
         const listing = await tx.listings.findUnique({ where: { id } });
@@ -193,7 +193,7 @@ export class ListingsService {
           const allowed = getAllowedTransitions(listing.status).join(', ');
           throw new ConflictError(
             `Transition from ${listing.status} to ${dto.status} is not allowed`,
-            allowed as any,
+            [allowed],
           );
         }
 
@@ -206,7 +206,7 @@ export class ListingsService {
         if (dto.status === ListingStatus.PUBLISHED)
           updateData.publishedAt = changedAt;
 
-        const updatedListing = await tx.listings.update({
+        const updated = await tx.listings.update({
           where: { id },
           data: updateData,
           include: {
@@ -218,15 +218,15 @@ export class ListingsService {
 
         await tx.listingStatusHistory.create({
           data: {
-            listingId: updatedListing.id,
-            agentId: updatedListing.agentId,
+            listingId: updated.id,
+            agentId: updated.agentId,
             fromStatus: listing.status,
-            toStatus: updatedListing.status,
+            toStatus: updated.status,
             createdAt: changedAt,
           },
         });
 
-        return updatedListing;
+        return updated;
       });
 
       if (updatedListing.status === ListingStatus.PUBLISHED) {
@@ -330,7 +330,7 @@ export class ListingsService {
   async uploadPhotos(
     listingId: number,
     files: Express.Multer.File[],
-  ): Promise<any> {
+  ): Promise<unknown>  {
     if (!files || files.length === 0) return [];
 
     const cleanUploadedFiles = () => {
@@ -385,7 +385,7 @@ export class ListingsService {
     }
   }
 
-  async deletePhoto(listingId: number, photoId: number): Promise<any> {
+  async deletePhoto(listingId: number, photoId: number): Promise<unknown> {
     return await this.prisma.$transaction(async (tx) => {
       const photo = await tx.listingPhotos.findFirst({
         where: { id: photoId, listingId },
@@ -431,24 +431,31 @@ export class ListingsService {
     if (user.role !== UserRole.moderator && listing.agentId !== user.id)
       throw new ForbiddenError('You do not have access to this listing');
     const pdfStream = new PassThrough();
-    this.pdfService.streamListingCard(pdfStream, listing as any);
-
+    this.pdfService.streamListingCard(pdfStream, {
+      ...listing,
+      price: Number(listing.price),
+      area: Number(listing.area),
+    });
     return pdfStream;
   }
-
   async getListingsBundleStream(ids: number[]): Promise<PassThrough> {
-    const listings = await this.prisma.listings.findMany({
+    const listingsList = await this.prisma.listings.findMany({
       where: { id: { in: ids } },
       include: {
         district: true,
         agent: { select: { id: true, name: true, email: true } },
       },
     });
-    if (!listings.length)
-      throw new NotFoundError('No listings found for given ids');
+    if (!listingsList.length) throw new NotFoundError('No listings found for given ids');
     const pdfStream = new PassThrough();
-    this.pdfService.streamListingsBundle(pdfStream, listings as any);
-
+    this.pdfService.streamListingsBundle(
+      pdfStream,
+      listingsList.map((item) => ({
+        ...item,
+        price: Number(item.price),
+        area: Number(item.area),
+      })),
+    );
     return pdfStream;
   }
 }

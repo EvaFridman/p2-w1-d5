@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PinoLogger } from 'nestjs-pino';
+import type { StringValue } from 'ms'; 
 import { UsersService } from '../users/users.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UnauthorizedError, ConflictError } from '../errors/app.exception.js';
@@ -52,19 +53,19 @@ export class AuthService {
 
   async issuePair(user: { id: number; role: string }) {
     const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
-    const accessExpires = this.configService.get<string>('ACCESS_TTL');
+    const accessExpires = this.configService.get<string>('ACCESS_TTL') ?? '15m';
 
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
-    const refreshExpires = this.configService.get<string>('REFRESH_TTL');
+    const refreshExpires = this.configService.get<string>('REFRESH_TTL') ?? '7d';
 
     const accessToken = await this.jwtService.signAsync(
       { sub: user.id, role: user.role },
-      { secret: accessSecret, expiresIn: accessExpires as any },
+      { secret: accessSecret, expiresIn: accessExpires as StringValue },
     );
 
     const refreshToken = await this.jwtService.signAsync(
       { sub: user.id },
-      { secret: refreshSecret, expiresIn: refreshExpires as any },
+      { secret: refreshSecret, expiresIn: refreshExpires as StringValue },
     );
 
     return { accessToken, refreshToken };

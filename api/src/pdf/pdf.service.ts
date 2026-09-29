@@ -9,9 +9,26 @@ const __dirname = path.dirname(__filename);
 
 const FONT_PATH = path.join(__dirname, '..', '..', 'fonts', 'DejaVuSans.ttf');
 
+interface PdfListingPayload {
+  title: string;
+  price: number | string;
+  area: number | string;
+  address: string;
+  description?: string | null;
+  district?: {
+    title: string;
+    [key: string]: unknown;
+  } | null;
+  agent?: {
+    name: string;
+    [key: string]: unknown;
+  } | null;
+  [key: string]: unknown;
+}
+
 @Injectable()
 export class PdfService {
-  streamListingCard(stream: Writable, listing: any): void {
+  streamListingCard(stream: Writable, listing: PdfListingPayload): void {
     const doc = new PDFDocument({ margin: 50 });
     doc.pipe(stream);
     doc.font(FONT_PATH);
@@ -32,7 +49,7 @@ export class PdfService {
     doc.end();
   }
 
-  streamListingsBundle(stream: Writable, listings: any[]): void {
+  streamListingsBundle(stream: Writable, listings: PdfListingPayload[]): void {
     const doc = new PDFDocument({ margin: 50 });
     doc.pipe(stream);
     doc.font(FONT_PATH);

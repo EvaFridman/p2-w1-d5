@@ -1,4 +1,4 @@
-import { Module, Injectable, ExecutionContext, Inject } from '@nestjs/common';
+import { Module, Injectable, Inject } from '@nestjs/common';
 import { createObserveModule } from '@nestjs/observe';
 import { randomUUID } from 'crypto';
 import { AppController } from './app.controller.js';
@@ -26,6 +26,7 @@ import {
   ThrottlerModule,
   ThrottlerGuard,
   ThrottlerException,
+  ThrottlerRequest,
 } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { FilesModule } from './files/files.module.js';
@@ -44,13 +45,7 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
   @Inject(PublicViewingRateLimitService)
   private readonly publicViewingRateLimitService: PublicViewingRateLimitService;
 
-  protected async handleRequest(options: {
-    context: ExecutionContext;
-    limit: number;
-    ttl: number;
-    throttler: any;
-    blockDuration: number;
-  }): Promise<boolean> {
+  protected async handleRequest(options: ThrottlerRequest): Promise<boolean> {
     const { context, limit, ttl, throttler, blockDuration } = options;
     if (throttler.name === 'ws') {
       return true;
@@ -78,22 +73,14 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     const buildSecret = process.env.NEXT_BUILD_SECRET;
     const buildRequest = req.headers['x-build-request'];
 
-    if (req.method === 'GET' && buildSecret && buildRequest === buildSecret)
-      return true;
-
-    if (throttler.name === 'login' || throttler.name === 'register')
-      return true;
+    if (req.method === 'GET' && buildSecret && buildRequest === buildSecret) return true;
+    if (throttler.name === 'login' || throttler.name === 'register') return true;
     if (
       throttler.name === 'viewing' &&
-      (!url.includes('/viewings') ||
-        /^\/public\/listings\/\d+\/viewings$/.test(path))
+      (!url.includes('/viewings') || /^\/public\/listings\/\d+\/viewings\$/.test(path))
     )
       return true;
-    if (
-      throttler.name === 'viewingPublic' &&
-      !/^\/public\/listings\/\d+\/viewings$/.test(path)
-    )
-      return true;
+    if (throttler.name === 'viewingPublic' && !/^\/public\/listings\/\d+\/viewings\$/.test(path)) return true;
     if (
       throttler.name === 'upload' &&
       !url.includes('/photos') &&
@@ -124,7 +111,7 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
       ttl,
       limit,
       blockDuration,
-      throttler.name,
+      throttler.name ?? '',
     );
 
     if (totalHits > limit) throw new ThrottlerException();

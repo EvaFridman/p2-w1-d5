@@ -102,7 +102,7 @@ export class PublicController {
     return await this.publicService.createViewing(
       listingId,
       dto,
-      request.user as any,
+      request.user ?? undefined,
     );
   }
 
@@ -120,7 +120,8 @@ export class PublicController {
     @Query() query: ListViewingsDto,
     @Req() request: Request,
   ) {
-    return await this.publicService.findMyViewings(query, request.user as any);
+    if (!request.user) throw new Error('User context is missing');
+    return await this.publicService.findMyViewings(query, request.user);
   }
 
   @ApiOperation({
@@ -133,7 +134,8 @@ export class PublicController {
   @ApiResponse({ status: 401, description: 'Токен отсутствует или невалиден' })
   @Get('favorites')
   async findAllFavorites(@Req() request: Request) {
-    return await this.publicService.findAllFavorites(request.user as any);
+    if (!request.user) throw new Error('User context is missing');
+    return await this.publicService.findAllFavorites(request.user);
   }
 
   @ApiOperation({ summary: 'Добавить объявление в избранное' })
@@ -148,7 +150,8 @@ export class PublicController {
     @Param('id', ParseIntPipe) listingId: number,
     @Req() request: Request,
   ) {
-    return await this.publicService.addFavorite(listingId, request.user as any);
+    if (!request.user) throw new Error('User context is missing');
+    return await this.publicService.addFavorite(listingId, request.user);
   }
 
   @ApiOperation({ summary: 'Удалить объявление из избранного' })
@@ -166,10 +169,8 @@ export class PublicController {
     @Param('id', ParseIntPipe) listingId: number,
     @Req() request: Request,
   ) {
-    return await this.publicService.removeFavorite(
-      listingId,
-      request.user as any,
-    );
+    if (!request.user) throw new Error('User context is missing');
+    return await this.publicService.removeFavorite(listingId, request.user);
   }
 
   @ApiOperation({
