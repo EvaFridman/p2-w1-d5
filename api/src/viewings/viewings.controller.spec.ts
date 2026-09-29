@@ -1,11 +1,4 @@
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
-
-jest.mock('@nestjs/throttler', () => ({
-  Throttle:
-    () => (target: object, _key?: string | symbol, descriptor?: unknown) =>
-      descriptor || target,
-}));
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { ViewingsController } from './viewings.controller.js';
 import { ViewingsService } from './viewings.service.js';
