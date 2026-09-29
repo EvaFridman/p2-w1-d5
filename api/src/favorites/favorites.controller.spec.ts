@@ -1,3 +1,4 @@
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FavoritesController } from './favorites.controller.js';
 import { FavoritesService } from './favorites.service.js';

@@ -1,10 +1,9 @@
-import { jest } from '@jest/globals';
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 
 jest.mock('@nestjs/throttler', () => ({
   Throttle:
-    () => (target: object, key?: string | symbol, descriptor?: unknown) => {
-      return descriptor || target;
-    },
+    () => (target: object, _key?: string | symbol, descriptor?: unknown) =>
+      descriptor || target,
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';

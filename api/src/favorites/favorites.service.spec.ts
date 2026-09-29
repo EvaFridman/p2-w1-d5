@@ -1,3 +1,4 @@
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { FavoritesService } from './favorites.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
