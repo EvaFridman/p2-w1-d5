@@ -1,0 +1,44 @@
+name: CI Quality Assurance
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install API dependencies (with peer deps bypass)
+        run: npm ci --prefix api --legacy-peer-deps
+
+      - name: Install Web dependencies
+        run: npm ci --prefix web
+
+      - name: Generate Prisma Client (CI Environment)
+        run: npm --prefix api run postinstall
+
+      - name: Run ESLint (Backend & Frontend)
+        run: |
+          npm run lint:api
+          npm run lint:web
+
+      - name: Run Stylelint (Styles Frontend)
+        run: npm --prefix web run lint:css
+
+      - name: Run TypeScript Typecheck
+        run: npm run typecheck
+
+      - name: Run API Unit Tests
+        run: npm run test:api
