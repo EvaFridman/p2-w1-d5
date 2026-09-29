@@ -10,7 +10,7 @@ import type { AuthUser } from "@/shared/session/types";
 import { Loader } from "@/shared/ui";
 import { http } from "@/shared/api/http";
 
-import styles from "./Header.module.css";
+import styles from "./Header.module.scss";
 
 export function HeaderActions() {
     const [user, setUser] = useState<AuthUser | null>(null);

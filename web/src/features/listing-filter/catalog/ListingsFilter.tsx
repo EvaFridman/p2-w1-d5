@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import styles from "./ListingsFilter.module.css";
+import styles from "./ListingsFilter.module.scss";
 
 import { ListingAreaRangeFilter } from "./ListingAreaRangeFilter";
 import { ListingDealTypeFilter } from "./ListingDealTypeFilter";

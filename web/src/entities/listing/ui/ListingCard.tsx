@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import styles from "./ListingCard.module.css";
+import styles from "./ListingCard.module.scss";
 
 import type { PublicListingType } from "../types";
 import { formatArea, formatDateShort, formatListingFeatures, formatPrice } from "@/shared/lib/format";

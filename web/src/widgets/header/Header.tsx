@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
-import styles from "./Header.module.css";
+import styles from "./Header.module.scss";
 import { SectionSwitcher } from "@/features/navigation/SectionSwitcher";
 import { Logo, Loader } from "@/shared/ui";
 import { ThemeSwitcher } from "@/features/theme/ThemeSwitcher";

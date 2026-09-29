@@ -1,3 +1,5 @@
+@use "@/shared/styles" as s;
+
 :root {
   /* Light theme */
   --color-bg: #f9f9f6;
@@ -51,10 +53,7 @@
   --color-info-bg: #e6f0f8;
 
   /* Typography */
-  --font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
+  --font-family: Arial, Helvetica, sans-serif;
 
   --font-size-xs: 12px;
   --font-size-sm: 14px;
@@ -166,6 +165,7 @@
   --focus-ring: 0 0 0 3px rgba(168, 241, 76, 0.22);
 }
 
+/* Базовые стили */
 * {
   box-sizing: border-box;
   padding: 0;
@@ -180,7 +180,6 @@ body {
 }
 
 body {
-  margin: 0;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -235,33 +234,6 @@ a {
   padding-inline: var(--container-padding);
 }
 
-@media (min-width: 768px) {
-  :root {
-    --font-size-2xl: 34px;
-    --font-size-3xl: 44px;
-  }
-}
-
-@media (min-width: 1024px) {
-  :root {
-    --font-size-2xl: 36px;
-    --font-size-3xl: 48px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
 h1,
 h2,
 h3,
@@ -273,26 +245,24 @@ h6 {
   line-height: var(--line-height-tight);
 }
 
-h1 {
-  font-size: var(--font-size-h1);
+h1 { font-size: var(--font-size-h1); }
+h2 { font-size: var(--font-size-h2); }
+h3 { font-size: var(--font-size-h3); }
+h4 { font-size: var(--font-size-h4); }
+h5 { font-size: var(--font-size-h5); }
+h6 { font-size: var(--font-size-h6); }
+
+/* Оптимизация медиазапросов через миксины */
+@include s.from(tablet) {
+  :root {
+    --font-size-2xl: 34px;
+    --font-size-3xl: 44px;
+  }
 }
 
-h2 {
-  font-size: var(--font-size-h2);
-}
-
-h3 {
-  font-size: var(--font-size-h3);
-}
-
-h4 {
-  font-size: var(--font-size-h4);
-}
-
-h5 {
-  font-size: var(--font-size-h5);
-}
-
-h6 {
-  font-size: var(--font-size-h6);
+@include s.from(desktop) {
+  :root {
+    --font-size-2xl: 36px;
+    --font-size-3xl: 48px;
+  }
 }
