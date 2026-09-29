@@ -1,10 +1,12 @@
 .button {
   display: inline-flex;
+  gap: var(--space-2);
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+
   border: 1px solid transparent;
   border-radius: var(--radius-md);
+
   font-weight: var(--font-weight-semibold);
   line-height: 1;
   white-space: nowrap;
@@ -23,8 +25,8 @@
 }
 
 .primary {
-  background: var(--color-primary);
   color: var(--color-primary-text);
+  background: var(--color-primary);
 }
 
 .primary:hover {
@@ -36,8 +38,8 @@
 }
 
 .secondary {
-  background: var(--color-secondary);
   color: var(--color-secondary-text);
+  background: var(--color-secondary);
 }
 
 .secondary:hover {
@@ -50,8 +52,8 @@
 
 .outline {
   border-color: var(--color-border-strong);
-  background: transparent;
   color: var(--color-text);
+  background: transparent;
 }
 
 .outline:hover {
@@ -59,8 +61,8 @@
 }
 
 .ghost {
-  background: transparent;
   color: var(--color-text);
+  background: transparent;
 }
 
 .ghost:hover {

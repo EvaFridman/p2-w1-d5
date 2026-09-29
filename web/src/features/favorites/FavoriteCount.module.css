@@ -2,13 +2,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   min-width: 18px;
   height: 18px;
   padding: 0 var(--space-1);
   border-radius: var(--radius-full);
-  background-color: var(--color-theme-active-bg);
-  color: var(--color-theme-active-text);
+
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
+  color: var(--color-theme-active-text);
+
+  background-color: var(--color-theme-active-bg);
 }

@@ -1,9 +1,10 @@
 .pagination {
   display: flex;
-  align-items: center;
-  justify-content: center;
   flex-wrap: wrap;
   gap: var(--space-1);
+  align-items: center;
+  justify-content: center;
+
   margin-top: var(--space-8);
 }
 
@@ -12,10 +13,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   min-width: var(--control-height-md);
   height: var(--control-height-md);
   padding-inline: var(--space-2);
   border-radius: var(--radius-md);
+
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
 }
@@ -25,11 +28,11 @@
 }
 
 .link:hover {
-  background-color: var(--color-surface-secondary);
   color: var(--color-text);
+  background-color: var(--color-surface-secondary);
 }
 
 .active {
-  background-color: var(--color-primary);
   color: var(--color-primary-text);
+  background-color: var(--color-primary);
 }

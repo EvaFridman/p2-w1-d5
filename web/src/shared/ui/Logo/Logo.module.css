@@ -2,10 +2,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   width: var(--control-height-sm);
   height: var(--control-height-sm);
-  color: var(--color-logo-text);
-  background-color: var(--color-logo-bg);
   border-radius: var(--radius-md);
+
   font-weight: var(--font-weight-bold);
+  color: var(--color-logo-text);
+
+  background-color: var(--color-logo-bg);
 }

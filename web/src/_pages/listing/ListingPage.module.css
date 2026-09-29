@@ -6,9 +6,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+
   margin-bottom: var(--space-6);
-  color: var(--color-text-secondary);
+
   font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .breadcrumbs a:hover {
@@ -40,11 +42,13 @@
 .summary {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--space-3);
+  align-items: flex-start;
+
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+
   background-color: var(--color-surface);
 }
 
@@ -59,15 +63,18 @@
 
 .viewingButton {
   display: inline-flex;
-  min-height: var(--control-height-md);
   align-items: center;
   justify-content: center;
+
   width: 100%;
+  min-height: var(--control-height-md);
   padding-inline: var(--space-5);
   border-radius: var(--radius-md);
-  background-color: var(--color-primary);
-  color: var(--color-primary-text);
+
   font-weight: var(--font-weight-medium);
+  color: var(--color-primary-text);
+
+  background-color: var(--color-primary);
 }
 
 .viewingButton:hover {
@@ -75,8 +82,8 @@
 }
 
 .summary p {
-  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .section {
@@ -96,8 +103,8 @@
 }
 
 .characteristics dt {
-  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .characteristics dd {
@@ -113,19 +120,21 @@
 
 .agent {
   display: flex;
-  align-items: center;
   gap: var(--space-4);
+  align-items: center;
+
   margin-top: var(--space-5);
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+
   background-color: var(--color-surface);
 }
 
 .agent p {
   margin-top: var(--space-1);
-  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .agent > :last-child {
@@ -138,7 +147,7 @@
   margin-top: var(--space-5);
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .characteristics {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -148,7 +157,7 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
   .page {
     padding-block: var(--space-8) var(--space-16);
   }
@@ -156,8 +165,8 @@
   .main {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 360px;
-    align-items: start;
     gap: var(--space-8);
+    align-items: start;
   }
 
   .summary {

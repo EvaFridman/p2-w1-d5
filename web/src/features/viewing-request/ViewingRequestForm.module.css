@@ -11,9 +11,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  color: var(--color-text);
+
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+  color: var(--color-text);
 }
 
 .comment {
@@ -21,15 +22,18 @@
 }
 
 .comment textarea {
+  resize: vertical;
+
   width: 100%;
   min-height: 120px;
-  resize: vertical;
   padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background-color: var(--color-surface);
-  color: var(--color-text);
+
   font: inherit;
+  color: var(--color-text);
+
+  background-color: var(--color-surface);
 }
 
 .comment textarea::placeholder {
@@ -40,7 +44,7 @@
   margin-top: var(--space-5);
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .fields {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -48,8 +52,8 @@
 
 .error {
   display: block;
-  color: var(--color-danger);
   font-size: var(--font-size-sm);
+  color: var(--color-danger);
 }
 
 .success {
@@ -69,9 +73,9 @@
 
 .userInfo {
   display: flex;
+  gap: var(--space-4);
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
 }
 
 .userInfo p {
@@ -79,10 +83,13 @@
 }
 
 .userInfo button {
-  border: 0;
+  cursor: pointer;
+
   padding: 0;
-  background: transparent;
+  border: 0;
+
   color: var(--color-text);
   text-decoration: underline;
-  cursor: pointer;
+
+  background: transparent;
 }

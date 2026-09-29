@@ -17,18 +17,19 @@
 }
 
 .label {
-  color: var(--color-text);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+  color: var(--color-text);
 }
 
 .consent {
   display: flex;
-  align-items: flex-start;
   gap: var(--space-2);
-  color: var(--color-text-secondary);
+  align-items: flex-start;
+
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
 }
 
 .consent input {
@@ -38,21 +39,21 @@
 
 .error {
   margin: 0;
-  color: var(--color-danger);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
+  color: var(--color-danger);
 }
 
 .footer {
   margin: 0;
-  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   text-align: center;
 }
 
 .footer a {
-  color: var(--color-text);
   font-weight: var(--font-weight-medium);
+  color: var(--color-text);
 }
 
 .footer a:hover {

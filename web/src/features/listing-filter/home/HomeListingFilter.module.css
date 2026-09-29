@@ -2,18 +2,23 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-3);
+
   padding: var(--space-4);
   border-radius: var(--radius-lg);
-  background-color: var(--color-surface);
+
   color: var(--color-text);
+
+  background-color: var(--color-surface);
 }
 
 .dealType {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-1);
+
   padding: var(--space-1);
   border-radius: var(--radius-md);
+
   background-color: var(--color-surface-secondary);
 }
 
@@ -23,13 +28,14 @@
   min-height: var(--control-height-md);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
+
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
 }
 
 .button {
-  background-color: transparent;
   color: var(--color-text-secondary);
+  background-color: transparent;
 }
 
 .button:hover {
@@ -37,8 +43,8 @@
 }
 
 .active {
-  background-color: var(--color-secondary);
   color: var(--color-secondary-text);
+  background-color: var(--color-secondary);
 }
 
 .field {
@@ -48,8 +54,8 @@
 }
 
 .field span {
-  color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .field input,
@@ -59,8 +65,10 @@
   padding-inline: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background-color: var(--color-surface);
+
   color: var(--color-text);
+
+  background-color: var(--color-surface);
 }
 
 .price {
@@ -70,20 +78,20 @@
 }
 
 .submit {
-  background-color: var(--color-primary);
-  color: var(--color-primary-text);
   font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-text);
+  background-color: var(--color-primary);
 }
 
 .submit:hover {
   background-color: var(--color-primary-hover);
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .form {
     grid-template-columns: auto 1fr 1fr 1.5fr auto;
-    align-items: end;
     gap: var(--space-3);
+    align-items: end;
     padding: var(--space-5);
   }
 

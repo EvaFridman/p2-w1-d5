@@ -4,10 +4,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+
   background-color: var(--color-surface);
+
   @include s.from(tablet) {
     padding: var(--space-4);
   }
@@ -15,9 +18,9 @@
 
 .header {
   display: flex;
+  gap: var(--space-3);
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
 }
 
 .header h2 {
@@ -27,9 +30,12 @@
 .reset {
   padding: 0;
   border: 0;
-  background: transparent;
-  color: var(--color-text-secondary);
+
   font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+
+  background: transparent;
+
   &:hover {
     color: var(--color-text);
   }
@@ -37,9 +43,10 @@
 
 .fieldset {
   display: flex;
-  min-width: 0;
   flex-direction: column;
   gap: var(--space-3);
+
+  min-width: 0;
   padding: 0;
   border: 0;
 }
@@ -61,15 +68,17 @@
   min-height: var(--control-height-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+
   color: var(--color-text);
+
+  background: var(--color-surface);
 }
 
 .dealActive,
 .roomActive {
   border-color: var(--color-primary);
-  background-color: var(--color-primary);
   color: var(--color-primary-text);
+  background-color: var(--color-primary);
 }
 
 .options {
@@ -81,9 +90,11 @@
 .option,
 .district {
   display: flex;
-  align-items: center;
   gap: var(--space-2);
+  align-items: center;
+
   min-height: 28px;
+
   font-size: var(--font-size-sm);
 }
 
@@ -101,9 +112,12 @@
   min-height: var(--control-height-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background-color: var(--color-surface);
-  color: var(--color-text);
+
   font-size: var(--font-size-sm);
+  color: var(--color-text);
+
+  background-color: var(--color-surface);
+
   &::placeholder {
     color: var(--color-text-muted);
   }
@@ -114,11 +128,12 @@
 }
 
 .districts {
+  overflow-y: auto;
   display: flex;
-  max-height: 220px;
   flex-direction: column;
   gap: var(--space-1);
-  overflow-y: auto;
+
+  max-height: 220px;
 }
 
 .district {
@@ -131,8 +146,8 @@
 }
 
 .districtCount {
-  color: var(--color-text-muted);
   font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 .range {
@@ -153,20 +168,22 @@
 
 .room,
 .roomActive {
+  cursor: pointer;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   min-height: var(--control-height-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  cursor: pointer;
 }
 
 .room input,
 .roomActive input {
+  pointer-events: none;
   position: absolute;
   opacity: 0;
-  pointer-events: none;
 }
 
 .submit {
@@ -174,14 +191,19 @@
   margin-top: var(--space-1);
   border: 0;
   border-radius: var(--radius-md);
-  background-color: var(--color-primary);
-  color: var(--color-primary-text);
+
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-text);
+
+  background-color: var(--color-primary);
+
   transition: background-color var(--transition-fast);
+
   &:hover {
     background-color: var(--color-primary-hover);
   }
+
   &:active {
     background-color: var(--color-primary-active);
   }

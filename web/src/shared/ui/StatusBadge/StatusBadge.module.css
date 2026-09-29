@@ -2,9 +2,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   min-height: 24px;
   padding-inline: var(--space-2);
   border-radius: var(--radius-full);
+
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
@@ -12,26 +14,26 @@
 }
 
 .success {
-  background: var(--color-success-bg);
   color: var(--color-success);
+  background: var(--color-success-bg);
 }
 
 .warning {
-  background: var(--color-warning-bg);
   color: var(--color-warning);
+  background: var(--color-warning-bg);
 }
 
 .danger {
-  background: var(--color-danger-bg);
   color: var(--color-danger);
+  background: var(--color-danger-bg);
 }
 
 .info {
-  background: var(--color-info-bg);
   color: var(--color-info);
+  background: var(--color-info-bg);
 }
 
 .neutral {
-  background: var(--color-surface-secondary);
   color: var(--color-text-secondary);
+  background: var(--color-surface-secondary);
 }

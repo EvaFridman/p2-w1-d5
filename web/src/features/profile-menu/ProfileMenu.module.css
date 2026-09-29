@@ -3,13 +3,15 @@
 }
 
 .trigger {
+  cursor: pointer;
+
   display: flex;
-  align-items: center;
   gap: var(--space-1);
-  color: var(--color-text);
+  align-items: center;
+
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  cursor: pointer;
+  color: var(--color-text);
   list-style: none;
 }
 
@@ -18,36 +20,43 @@
 }
 
 .arrow {
-  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .dropdown {
   position: absolute;
+  z-index: 10;
   top: calc(100% + var(--space-2));
   right: 0;
-  z-index: 10;
+
   display: flex;
-  min-width: 160px;
   flex-direction: column;
+
+  min-width: 160px;
   padding: var(--space-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+
   background-color: var(--color-surface);
   box-shadow: var(--shadow-md);
 }
 
 .item {
+  cursor: pointer;
+
   display: block;
+
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 0;
-  background: none;
-  color: var(--color-text);
+
   font: inherit;
+  color: var(--color-text);
   text-align: left;
   text-decoration: none;
-  cursor: pointer;
+
+  background: none;
 }
 
 .item:hover {

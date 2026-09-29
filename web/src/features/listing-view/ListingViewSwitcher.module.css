@@ -1,33 +1,38 @@
 .switcher {
   display: flex;
-  align-items: center;
   gap: var(--space-1);
+  align-items: center;
+
   padding: var(--space-1);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+
   background-color: var(--color-surface);
 }
 
 .button,
 .active {
   display: inline-flex;
-  width: var(--control-height-md);
-  height: var(--control-height-md);
   align-items: center;
   justify-content: center;
+
+  width: var(--control-height-md);
+  height: var(--control-height-md);
   border: 0;
   border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-secondary);
+
   font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+
+  background: transparent;
 }
 
 .button:hover {
-  background-color: var(--color-surface-secondary);
   color: var(--color-text);
+  background-color: var(--color-surface-secondary);
 }
 
 .active {
-  background-color: var(--color-primary);
   color: var(--color-primary-text);
+  background-color: var(--color-primary);
 }
