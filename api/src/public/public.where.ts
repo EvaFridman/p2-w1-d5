@@ -1,14 +1,18 @@
 import { Prisma, ListingStatus } from '../generated/prisma/index.js';
 import { PublicListingsDto } from './dto/public-listings.dto.js';
 
-export function buildPublicListingsWhere(dto: PublicListingsDto): Prisma.ListingsWhereInput {
+export function buildPublicListingsWhere(
+  dto: PublicListingsDto,
+): Prisma.ListingsWhereInput {
   const where: Prisma.ListingsWhereInput = { status: ListingStatus.PUBLISHED };
 
   if (dto.districtId) where.districtId = dto.districtId;
   if (dto.dealType) where.dealType = dto.dealType;
   if (dto.propertyType) where.propertyType = dto.propertyType;
 
-  if (dto.rooms && dto.rooms.length > 0) { where.rooms = { in: dto.rooms } }
+  if (dto.rooms && dto.rooms.length > 0) {
+    where.rooms = { in: dto.rooms };
+  }
 
   if (dto.priceMin != null || dto.priceMax != null) {
     where.price = {};

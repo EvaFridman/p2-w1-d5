@@ -1,46 +1,46 @@
 .header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
 }
 
 .link {
-    color: var(--color-text);
-    font-size: var(--font-size-md);
-    font-weight: var(--font-weight-regular);
-    transition: color var(--transition-fast);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  transition: color var(--transition-fast);
 }
 
 .link:hover {
-    color: var(--color-text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .active {
-    color: var(--color-text);
-    font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
 }
 
 .header .active {
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md);
-    background: var(--color-primary);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
 }
 
 .footer {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .footer .link,
 .footer .active {
-    color: var(--color-accent);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-regular);
-    transition: color var(--transition-fast);
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  transition: color var(--transition-fast);
 }
 
 .footer .link:hover,
 .footer .active:hover {
-    color: var(--color-primary);
+  color: var(--color-primary);
 }

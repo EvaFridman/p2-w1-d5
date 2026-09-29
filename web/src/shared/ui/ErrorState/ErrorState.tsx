@@ -7,9 +7,14 @@ export type Props = {
   icon?: ReactNode;
   action?: ReactNode;
   className?: string;
-}
+};
 
-export function ErrorState({ title = "Сервис временно недоступен", description = "Попробуйте обновить страницу или повторить попытку позже.", action, className = "", }: Props) {
+export function ErrorState({
+  title = "Сервис временно недоступен",
+  description = "Попробуйте обновить страницу или повторить попытку позже.",
+  action,
+  className = "",
+}: Props) {
   return (
     <section className={`${styles.state} ${className}`}>
       <h2 className={styles.title}>{title}</h2>

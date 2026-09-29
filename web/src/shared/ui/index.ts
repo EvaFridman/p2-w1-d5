@@ -6,6 +6,6 @@ export { Chip } from "./Chip/Chip";
 export { EmptyState } from "./EmptyState/EmptyState";
 export { ErrorState } from "./ErrorState/ErrorState";
 export { Skeleton } from "./Skeleton/Skeleton";
-export { Logo } from "./Logo/Logo"
+export { Logo } from "./Logo/Logo";
 export { Pagination } from "./Pagination/Pagination";
 export { Loader } from "./Loader/Loader";

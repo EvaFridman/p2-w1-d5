@@ -4,15 +4,15 @@ import { useEffect } from "react";
 import { useAppStore } from "@/shared/providers/app-store-provider";
 
 type Props = {
-    listingId: number;
+  listingId: number;
 };
 
 export function RecentlyViewedTracker({ listingId }: Props) {
-    const addRecentlyViewedId = useAppStore((state) => state.addRecentlyViewedId);
+  const addRecentlyViewedId = useAppStore((state) => state.addRecentlyViewedId);
 
-    useEffect(() => {
-        addRecentlyViewedId(String(listingId));
-    }, [listingId, addRecentlyViewedId]);
+  useEffect(() => {
+    addRecentlyViewedId(String(listingId));
+  }, [listingId, addRecentlyViewedId]);
 
-    return null;
+  return null;
 }

@@ -1,14 +1,16 @@
-import { TaskRunnerService } from "../../tasks/task-runner.service.js";
+import { TaskRunnerService } from '../../tasks/task-runner.service.js';
 
 export type ExpireListingsResult = {
-    processed: number;
-    errors: number;
+  processed: number;
+  errors: number;
 };
 
 export type ExpireListingsActivities = {
-    expireListingsActivity: () => Promise<ExpireListingsResult | undefined>;
+  expireListingsActivity: () => Promise<ExpireListingsResult | undefined>;
 };
 
-export function createExpireListingsActivities(taskRunner: TaskRunnerService): ExpireListingsActivities {
-    return { expireListingsActivity: () => taskRunner.runExpireListings() };
+export function createExpireListingsActivities(
+  taskRunner: TaskRunnerService,
+): ExpireListingsActivities {
+  return { expireListingsActivity: () => taskRunner.runExpireListings() };
 }

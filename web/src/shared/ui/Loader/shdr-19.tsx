@@ -266,7 +266,15 @@ export const shdr19Orb: OrbVariant = {
   note: "beads swelling and shrinking in their cells, packed over the ball",
   frag: FOAM_FRAG,
   params: [
-    { key: "speed", label: "Anim speed", min: 0.015, max: 10, step: 0.05, default: 0.5, integrate: true },
+    {
+      key: "speed",
+      label: "Anim speed",
+      min: 0.015,
+      max: 10,
+      step: 0.05,
+      default: 0.5,
+      integrate: true,
+    },
     { key: "swirl", label: "Swirl", min: 0, max: 3, step: 0.015, default: 0.05, integrate: true },
     { key: "slide", label: "Drift", min: 0, max: 4, step: 0.02, default: 0.1, integrate: true },
     { key: "radius", label: "Radius", min: 0.15, max: 3, step: 0.015, default: 0.9 },
@@ -283,7 +291,7 @@ export const shdr19Orb: OrbVariant = {
     { key: "saturation", label: "Saturation", min: 0, max: 4, step: 0.02, default: 1.1 },
     { key: "floorLevel", label: "Body fill", min: 0, max: 2, step: 0.01, default: 0.06 },
     { key: "light", label: "Key light", min: 0, max: 3, step: 0.015, default: 0.3 },
-    { key: "rim", label: "Rim sheen", min: 0, max: 3, step: 0.015, default: 0.35 }
+    { key: "rim", label: "Rim sheen", min: 0, max: 3, step: 0.015, default: 0.35 },
   ],
   /*
    * Four stops: the two ends of the per-bead hash, the body the packing
@@ -293,7 +301,7 @@ export const shdr19Orb: OrbVariant = {
     { key: "low", label: "Dot", default: "#ffffff" },
     { key: "high", label: "Dot accent", default: "#eef5ff" },
     { key: "body", label: "Body", default: "#05070c" },
-    { key: "sheen", label: "Sheen", default: "#9dbfe4" }
+    { key: "sheen", label: "Sheen", default: "#9dbfe4" },
   ],
   /*
     Staged on BEAD SIZE, which decides whether the ball is a scatter of
@@ -321,7 +329,7 @@ export const shdr19Orb: OrbVariant = {
       edge: 51,
       gain: 2.28,
       contrast: 2.6,
-      rim: 0.345
+      rim: 0.345,
     },
     /*
       searching: the screen is set MOVING. The clock runs five times idle,
@@ -343,7 +351,7 @@ export const shdr19Orb: OrbVariant = {
       gain: 1.04,
       contrast: 0.55,
       light: 0.585,
-      rim: 0.24
+      rim: 0.24,
     },
     /*
       answering: the screen goes HARD. The generator detune drops to zero,
@@ -367,16 +375,16 @@ export const shdr19Orb: OrbVariant = {
       gain: 1.35,
       contrast: 3.2,
       saturation: 2.04,
-      floorLevel: 0
-    }
+      floorLevel: 0,
+    },
   },
   // cool glass at rest, then pure white on black for both working states —
   // the answering one keeps the faintly warm body
   stateColors: {
     idle: { low: "#ffffff", high: "#eef5ff", body: "#05070c", sheen: "#9dbfe4" },
     thinking: { low: "#dae6ff", high: "#ffffff", body: "#000000", sheen: "#ffffff" },
-    speaking: { low: "#ffffff", high: "#ffffff", body: "#140a06", sheen: "#ffffff" }
-  }
+    speaking: { low: "#ffffff", high: "#ffffff", body: "#140a06", sheen: "#ffffff" },
+  },
 };
 
 export type Shdr19Props = Omit<ShaderOrbProps, "variant">;

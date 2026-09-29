@@ -8,16 +8,23 @@ import { UpdateListingDto } from './dto/update-listing.dto.js';
 import { UpdateStatusDto } from './dto/update-status.dto.js';
 import { UpdatePhotoDto } from './dto/update-photo.dto.js';
 import { buildListingsWhere } from './listings.where.js';
-import { canTransition, getAllowedTransitions } from '../common/listingStatusTransitions.service.js';
-import { NotFoundError, ConflictError, ForbiddenError } from '../errors/app.exception.js';
+import {
+  canTransition,
+  getAllowedTransitions,
+} from '../common/listingStatusTransitions.service.js';
+import {
+  NotFoundError,
+  ConflictError,
+  ForbiddenError,
+} from '../errors/app.exception.js';
 import { UserRole, ListingStatus, Prisma } from '../generated/prisma/index.js';
-import { EventEmitter2 } from "@nestjs/event-emitter";
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ListingPublishedEvent } from './events/listing-published.event.js';
 import path from 'path';
 import fs from 'fs';
 import { PassThrough } from 'stream';
 import { PdfService } from '../pdf/pdf.service.js';
-import { PublisherService } from "../queue/publisher.service.js";
+import { PublisherService } from '../queue/publisher.service.js';
 
 @Injectable()
 export class ListingsService {
@@ -27,26 +34,34 @@ export class ListingsService {
     private readonly events: EventEmitter2,
     private readonly pdfService: PdfService,
     private readonly publisherService: PublisherService,
-    private readonly logger: PinoLogger
-  ) { }
+    private readonly logger: PinoLogger,
+  ) {}
 
   private handlePrismaError(error: any) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2025') throw new NotFoundError('Listing not found');
       if (error.code === 'P2002') {
-        const constraintName = (error.meta?.target as string[])?.join('_') || 'constraint';
-        throw new ConflictError(`Unique constraint failed on ${constraintName}`, constraintName as any);
+        const constraintName =
+          (error.meta?.target as string[])?.join('_') || 'constraint';
+        throw new ConflictError(
+          `Unique constraint failed on ${constraintName}`,
+          constraintName as any,
+        );
       }
     }
     throw error;
   }
 
   async findAll(dto: ListListingsDto, user: { id: number; role: string }) {
-    const pageSizeDefault = Number(this.configService.get<number>('PAGE_SIZE_DEFAULT') ?? 20);
-    const pageSizeMax = Number(this.configService.get<number>('PAGE_SIZE_MAX') ?? 100);
+    const pageSizeDefault = Number(
+      this.configService.get<number>('PAGE_SIZE_DEFAULT') ?? 20,
+    );
+    const pageSizeMax = Number(
+      this.configService.get<number>('PAGE_SIZE_MAX') ?? 100,
+    );
 
-    const finalPage = (!dto.page || dto.page < 1) ? 1 : dto.page;
-    let finalLimit = (!dto.limit || dto.limit < 1) ? pageSizeDefault : dto.limit;
+    const finalPage = !dto.page || dto.page < 1 ? 1 : dto.page;
+    let finalLimit = !dto.limit || dto.limit < 1 ? pageSizeDefault : dto.limit;
     if (finalLimit > pageSizeMax) finalLimit = pageSizeMax;
 
     const isAgent = user.role === UserRole.agent;
@@ -65,15 +80,18 @@ export class ListingsService {
         include: {
           agent: { select: { id: true, name: true, email: true } },
           district: true,
-          photos: { orderBy: { position: 'asc' } }
-        }
+          photos: { orderBy: { position: 'asc' } },
+        },
       }),
-      this.prisma.listings.count({ where: whereCondition })
+      this.prisma.listings.count({ where: whereCondition }),
     ]);
 
     const totalPages = total > 0 ? Math.ceil(total / finalLimit) : 0;
 
-    return { items, meta: { page: finalPage, limit: finalLimit, total, totalPages } };
+    return {
+      items,
+      meta: { page: finalPage, limit: finalLimit, total, totalPages },
+    };
   }
 
   async create(dto: CreateListingDto, agentId: number): Promise<any> {
@@ -87,7 +105,7 @@ export class ListingsService {
           district: { connect: { id: districtId } },
           createdAt: new Date(),
           updatedAt: new Date(),
-        }
+        },
       });
     } catch (error) {
       this.handlePrismaError(error);
@@ -101,20 +119,31 @@ export class ListingsService {
         agent: { select: { id: true, name: true, email: true } },
         district: true,
         photos: { orderBy: { position: 'asc' } },
-        _count: { select: { viewings: true } }
-      }
+        _count: { select: { viewings: true } },
+      },
     });
 
     if (!listing) throw new NotFoundError('Listing not found');
-    if (user.role === UserRole.agent && listing.agentId !== user.id) throw new ForbiddenError('You do not have access to this listing');
+    if (user.role === UserRole.agent && listing.agentId !== user.id)
+      throw new ForbiddenError('You do not have access to this listing');
 
-    return { ...listing, allowedTransitions: getAllowedTransitions(listing.status) };
+    return {
+      ...listing,
+      allowedTransitions: getAllowedTransitions(listing.status),
+    };
   }
 
-  async update(id: number, dto: UpdateListingDto, user: { id: number; role: string }): Promise<any> {
+  async update(
+    id: number,
+    dto: UpdateListingDto,
+    user: { id: number; role: string },
+  ): Promise<any> {
     await this.findOne(id, user);
     try {
-      return await this.prisma.listings.update({ where: { id }, data: { ...dto, updatedAt: new Date() } });
+      return await this.prisma.listings.update({
+        where: { id },
+        data: { ...dto, updatedAt: new Date() },
+      });
     } catch (error) {
       this.handlePrismaError(error);
     }
@@ -124,11 +153,11 @@ export class ListingsService {
     const cutoff = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 
     const listings = await this.prisma.listings.findMany({
-        where: {
-            status: ListingStatus.PUBLISHED,
-            publishedAt: { lte: cutoff },
-        },
-        select: { id: true },
+      where: {
+        status: ListingStatus.PUBLISHED,
+        publishedAt: { lte: cutoff },
+      },
+      select: { id: true },
     });
 
     let processed = 0;
@@ -150,7 +179,11 @@ export class ListingsService {
     return { processed, errors };
   }
 
-  async updateStatus(id: number, dto: UpdateStatusDto, options?: { expired?: boolean }): Promise<any> {
+  async updateStatus(
+    id: number,
+    dto: UpdateStatusDto,
+    options?: { expired?: boolean },
+  ): Promise<any> {
     try {
       const updatedListing = await this.prisma.$transaction(async (tx) => {
         const listing = await tx.listings.findUnique({ where: { id } });
@@ -158,13 +191,20 @@ export class ListingsService {
 
         if (!canTransition(listing.status, dto.status)) {
           const allowed = getAllowedTransitions(listing.status).join(', ');
-          throw new ConflictError(`Transition from ${listing.status} to ${dto.status} is not allowed`, allowed as any);
+          throw new ConflictError(
+            `Transition from ${listing.status} to ${dto.status} is not allowed`,
+            allowed as any,
+          );
         }
 
         const changedAt = new Date();
-        const updateData: Prisma.ListingsUpdateInput = { status: dto.status, updatedAt: changedAt };
+        const updateData: Prisma.ListingsUpdateInput = {
+          status: dto.status,
+          updatedAt: changedAt,
+        };
 
-        if (dto.status === ListingStatus.PUBLISHED) updateData.publishedAt = changedAt;
+        if (dto.status === ListingStatus.PUBLISHED)
+          updateData.publishedAt = changedAt;
 
         const updatedListing = await tx.listings.update({
           where: { id },
@@ -172,8 +212,8 @@ export class ListingsService {
           include: {
             agent: { select: { id: true, name: true, email: true } },
             district: true,
-            photos: { orderBy: { position: 'asc' } }
-          }
+            photos: { orderBy: { position: 'asc' } },
+          },
         });
 
         await tx.listingStatusHistory.create({
@@ -195,19 +235,27 @@ export class ListingsService {
             listingId: updatedListing.id,
             agentId: updatedListing.agentId,
           },
-          "Listing published",
+          'Listing published',
         );
 
         this.events.emit(
-            ListingPublishedEvent.eventName,
-            new ListingPublishedEvent(updatedListing.id, updatedListing.agentId, updatedListing.title)
+          ListingPublishedEvent.eventName,
+          new ListingPublishedEvent(
+            updatedListing.id,
+            updatedListing.agentId,
+            updatedListing.title,
+          ),
         );
-    
-        this.publisherService.publish("listing.published", {
+
+        this.publisherService.publish(
+          'listing.published',
+          {
             listingId: updatedListing.id,
-        }, {
+          },
+          {
             messageId: `listing-published:${updatedListing.id}`,
-        });
+          },
+        );
       }
 
       if (updatedListing.status === ListingStatus.UNPUBLISHED) {
@@ -217,18 +265,22 @@ export class ListingsService {
               listingId: updatedListing.id,
               agentId: updatedListing.agentId,
             },
-            "Listing unpublished",
+            'Listing unpublished',
           );
         }
 
         if (options?.expired) {
-          this.publisherService.publish("listing.expired", {
-            listingId: updatedListing.id,
-            agentId: updatedListing.agentId,
-            title: updatedListing.title,
-          }, {
+          this.publisherService.publish(
+            'listing.expired',
+            {
+              listingId: updatedListing.id,
+              agentId: updatedListing.agentId,
+              title: updatedListing.title,
+            },
+            {
               messageId: `listing-expired:${updatedListing.id}`,
-          });
+            },
+          );
         }
       }
 
@@ -240,31 +292,45 @@ export class ListingsService {
       this.handlePrismaError(error);
     }
   }
-  
+
   async findPhotos(listingId: number) {
-    const listing = await this.prisma.listings.findUnique({ where: { id: listingId } });
+    const listing = await this.prisma.listings.findUnique({
+      where: { id: listingId },
+    });
     if (!listing) throw new NotFoundError('Listing not found');
-    return await this.prisma.listingPhotos.findMany({ where: { listingId }, orderBy: { position: 'asc' } });
+    return await this.prisma.listingPhotos.findMany({
+      where: { listingId },
+      orderBy: { position: 'asc' },
+    });
   }
 
   async updatePhoto(listingId: number, photoId: number, dto: UpdatePhotoDto) {
-    const photo = await this.prisma.listingPhotos.findFirst({ where: { id: photoId, listingId } });
+    const photo = await this.prisma.listingPhotos.findFirst({
+      where: { id: photoId, listingId },
+    });
     if (!photo) throw new NotFoundError('Photo not found for this listing');
 
     return await this.prisma.$transaction(async (tx) => {
-      if (dto.isCover === true) await tx.listingPhotos.updateMany({ where: { listingId, isCover: true }, data: { isCover: false } });
+      if (dto.isCover === true)
+        await tx.listingPhotos.updateMany({
+          where: { listingId, isCover: true },
+          data: { isCover: false },
+        });
       return await tx.listingPhotos.update({
         where: { id: photoId },
         data: {
           ...(dto.position !== undefined && { position: dto.position }),
           ...(dto.isCover !== undefined && { isCover: dto.isCover }),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     });
   }
 
-  async uploadPhotos(listingId: number, files: Express.Multer.File[]): Promise<any> {
+  async uploadPhotos(
+    listingId: number,
+    files: Express.Multer.File[],
+  ): Promise<any> {
     if (!files || files.length === 0) return [];
 
     const cleanUploadedFiles = () => {
@@ -276,11 +342,20 @@ export class ListingsService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
-        const existingPhotos = await tx.listingPhotos.findMany({ where: { listingId }, orderBy: { position: 'asc' } });
+        const existingPhotos = await tx.listingPhotos.findMany({
+          where: { listingId },
+          orderBy: { position: 'asc' },
+        });
 
-        if (existingPhotos.length + files.length > 5) throw new ConflictError(`Limit exceeded. Already has ${existingPhotos.length} photos. Cannot add ${files.length} more (max 5).`);
+        if (existingPhotos.length + files.length > 5)
+          throw new ConflictError(
+            `Limit exceeded. Already has ${existingPhotos.length} photos. Cannot add ${files.length} more (max 5).`,
+          );
 
-        let currentMaxPosition = existingPhotos.reduce((max, p) => ((p.position ?? 0) > max ? (p.position ?? 0) : max), 0);
+        let currentMaxPosition = existingPhotos.reduce(
+          (max, p) => ((p.position ?? 0) > max ? (p.position ?? 0) : max),
+          0,
+        );
         const hasCover = existingPhotos.some((p) => p.isCover);
 
         const createData = files.map((file, index) => {
@@ -290,8 +365,8 @@ export class ListingsService {
             fileName: file.filename,
             externalUrl: null,
             position: currentMaxPosition,
-            sizeBytes: file.size, 
-            isCover: !hasCover && index === 0, 
+            sizeBytes: file.size,
+            isCover: !hasCover && index === 0,
             createdAt: new Date(),
             updatedAt: new Date(),
           };
@@ -312,13 +387,22 @@ export class ListingsService {
 
   async deletePhoto(listingId: number, photoId: number): Promise<any> {
     return await this.prisma.$transaction(async (tx) => {
-      const photo = await tx.listingPhotos.findFirst({ where: { id: photoId, listingId } });
+      const photo = await tx.listingPhotos.findFirst({
+        where: { id: photoId, listingId },
+      });
       if (!photo) throw new NotFoundError('Photo not found');
       await tx.listingPhotos.delete({ where: { id: photoId } });
 
       if (photo.isCover) {
-        const nextPhoto = await tx.listingPhotos.findFirst({ where: { listingId }, orderBy: { position: 'asc' } });
-        if (nextPhoto) await tx.listingPhotos.update({ where: { id: nextPhoto.id }, data: { isCover: true } })
+        const nextPhoto = await tx.listingPhotos.findFirst({
+          where: { listingId },
+          orderBy: { position: 'asc' },
+        });
+        if (nextPhoto)
+          await tx.listingPhotos.update({
+            where: { id: nextPhoto.id },
+            data: { isCover: true },
+          });
       }
 
       if (photo.fileName) {
@@ -330,18 +414,22 @@ export class ListingsService {
     });
   }
 
-  async getListingPdfStream(id: number, user: { id: number; role: string }): Promise<PassThrough> {
+  async getListingPdfStream(
+    id: number,
+    user: { id: number; role: string },
+  ): Promise<PassThrough> {
     const listing = await this.prisma.listings.findUnique({
       where: { id },
       include: {
         district: true,
         agent: true,
-        photos: { orderBy: { position: 'asc' } }
-      }
+        photos: { orderBy: { position: 'asc' } },
+      },
     });
 
     if (!listing) throw new NotFoundError('Listing not found');
-    if (user.role !== UserRole.moderator && listing.agentId !== user.id) throw new ForbiddenError('You do not have access to this listing');
+    if (user.role !== UserRole.moderator && listing.agentId !== user.id)
+      throw new ForbiddenError('You do not have access to this listing');
     const pdfStream = new PassThrough();
     this.pdfService.streamListingCard(pdfStream, listing as any);
 
@@ -349,8 +437,15 @@ export class ListingsService {
   }
 
   async getListingsBundleStream(ids: number[]): Promise<PassThrough> {
-    const listings = await this.prisma.listings.findMany({where: { id: { in: ids } },include: { district: true, agent: { select: { id: true, name: true, email: true }}}});
-    if (!listings.length) throw new NotFoundError('No listings found for given ids');
+    const listings = await this.prisma.listings.findMany({
+      where: { id: { in: ids } },
+      include: {
+        district: true,
+        agent: { select: { id: true, name: true, email: true } },
+      },
+    });
+    if (!listings.length)
+      throw new NotFoundError('No listings found for given ids');
     const pdfStream = new PassThrough();
     this.pdfService.streamListingsBundle(pdfStream, listings as any);
 

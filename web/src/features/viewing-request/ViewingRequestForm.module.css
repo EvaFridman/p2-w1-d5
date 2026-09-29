@@ -1,88 +1,88 @@
 .form {
-    max-width: 760px;
+  max-width: 760px;
 }
 
 .fields {
-    display: grid;
-    gap: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
 }
 
 .fields label {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    color: var(--color-text);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .comment {
-    grid-column: 1 / -1;
+  grid-column: 1 / -1;
 }
 
 .comment textarea {
-    width: 100%;
-    min-height: 120px;
-    resize: vertical;
-    padding: var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-surface);
-    color: var(--color-text);
-    font: inherit;
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
 }
 
 .comment textarea::placeholder {
-    color: var(--color-text-muted);
+  color: var(--color-text-muted);
 }
 
 .form button {
-    margin-top: var(--space-5);
+  margin-top: var(--space-5);
 }
 
 @media (min-width: 768px) {
-    .fields {
-        grid-template-columns: repeat(2, 1fr);
-    }
+  .fields {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .error {
-    display: block;
-    color: var(--color-danger);
-    font-size: var(--font-size-sm);
+  display: block;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
 }
 
 .success {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .success p {
-    margin: 0;
+  margin: 0;
 }
 
 .success a {
-    color: var(--color-text);
-    text-decoration: underline;
+  color: var(--color-text);
+  text-decoration: underline;
 }
 
 .userInfo {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
 }
 
 .userInfo p {
-    margin: 0;
+  margin: 0;
 }
 
 .userInfo button {
-    border: 0;
-    padding: 0;
-    background: transparent;
-    color: var(--color-text);
-    text-decoration: underline;
-    cursor: pointer;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text);
+  text-decoration: underline;
+  cursor: pointer;
 }

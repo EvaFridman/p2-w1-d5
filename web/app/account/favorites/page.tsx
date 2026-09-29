@@ -6,21 +6,21 @@ import { getSession } from "@/shared/session";
 import { Loader } from "@/shared/ui";
 
 async function AccountFavoritesContent() {
-    const session = await getSession();
+  const session = await getSession();
 
-    if (!session) redirect("/login?returnUrl=/account/favorites");
+  if (!session) redirect("/login?returnUrl=/account/favorites");
 
-    return (
-        <Suspense fallback={<Loader />}>
-            <FavoritesList />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={<Loader />}>
+      <FavoritesList />
+    </Suspense>
+  );
 }
 
 export default function AccountFavoritesPage() {
-    return (
-        <Suspense fallback={<Loader />}>
-            <AccountFavoritesContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={<Loader />}>
+      <AccountFavoritesContent />
+    </Suspense>
+  );
 }

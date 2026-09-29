@@ -3,7 +3,7 @@
 
 @mixin from($name) {
   $width: map.get(v.$breakpoints, $name);
-  
+
   @media (min-width: $width) {
     @content;
   }
@@ -11,7 +11,7 @@
 
 @mixin upto($name) {
   $width: map.get(v.$breakpoints, $name);
-  
+
   @media (max-width: ($width - 1px)) {
     @content;
   }

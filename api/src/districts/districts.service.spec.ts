@@ -13,14 +13,14 @@ describe('DistrictsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DistrictsService,
-        { 
-          provide: PrismaService, 
-          useValue: { 
-            districts: { 
-              findUnique: jest.fn(), 
-              count: jest.fn() 
-            } 
-          } 
+        {
+          provide: PrismaService,
+          useValue: {
+            districts: {
+              findUnique: jest.fn(),
+              count: jest.fn(),
+            },
+          },
         },
         { provide: ConfigService, useValue: { get: jest.fn() } },
       ],
@@ -31,8 +31,15 @@ describe('DistrictsService', () => {
   });
 
   it('should return a district if found', async () => {
-    const mockDistrict = { id: 1, title: 'Северный район 1', slug: 'severnyy-rayon-1', city: 'Казань' };
-    (jest.spyOn(prisma.districts, 'findUnique') as any).mockResolvedValue(mockDistrict);
+    const mockDistrict = {
+      id: 1,
+      title: 'Северный район 1',
+      slug: 'severnyy-rayon-1',
+      city: 'Казань',
+    };
+    (jest.spyOn(prisma.districts, 'findUnique') as any).mockResolvedValue(
+      mockDistrict,
+    );
     const result = await service.findOne(1);
     expect(result).toEqual(mockDistrict);
   });

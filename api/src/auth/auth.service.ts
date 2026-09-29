@@ -12,136 +12,143 @@ import { LoginBlockService } from '../redis/login-block.service.js';
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private readonly usersService: UsersService,
-        private readonly prisma: PrismaService,
-        private readonly jwtService: JwtService,
-        private readonly configService: ConfigService,
-        private readonly loginBlockService: LoginBlockService,
-        private readonly logger: PinoLogger,
-    ) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly loginBlockService: LoginBlockService,
+    private readonly logger: PinoLogger,
+  ) {}
 
-    async login(email: string, password: string) {
-        const blockTtl = await this.loginBlockService.getBlockTtl(email);
-    
-        if (blockTtl > 0) {
-            this.logger.warn(
-                { blocked: true },
-                'Login attempt blocked',
-            );
-            
-            throw new UnauthorizedError(`Too many failed login attempts. Try again in ${Math.ceil(blockTtl / 60)} minutes`);
-        }
-    
-        const user = await this.usersService.findByEmail(email);
-    
-        if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-            await this.loginBlockService.recordFailure(email);
-            throw new UnauthorizedError("Invalid credentials");
-        }
-    
-        await this.loginBlockService.clearFailures(email);
-    
-        const tokens = await this.issuePair(user);
-        
-        const { passwordHash: _passwordHash, ...publicUser } = user;
+  async login(email: string, password: string) {
+    const blockTtl = await this.loginBlockService.getBlockTtl(email);
 
-        this.logger.info(
-            { userId: user.id },
-            'User logged in',
-        );
-    
-        return { ...tokens, user: publicUser };
+    if (blockTtl > 0) {
+      this.logger.warn({ blocked: true }, 'Login attempt blocked');
+
+      throw new UnauthorizedError(
+        `Too many failed login attempts. Try again in ${Math.ceil(blockTtl / 60)} minutes`,
+      );
     }
 
-    async issuePair(user: { id: number; role: string }) {
+    const user = await this.usersService.findByEmail(email);
 
-        const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
-        const accessExpires = this.configService.get<string>('ACCESS_TTL');
-    
-        const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
-        const refreshExpires = this.configService.get<string>('REFRESH_TTL');
-
-        const accessToken = await this.jwtService.signAsync(
-            { sub: user.id, role: user.role },
-            { secret: accessSecret, expiresIn: accessExpires as any },
-        );
-      
-        const refreshToken = await this.jwtService.signAsync(
-            { sub: user.id },
-            { secret: refreshSecret, expiresIn: refreshExpires as any },
-        );
-
-        return { accessToken, refreshToken };
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      await this.loginBlockService.recordFailure(email);
+      throw new UnauthorizedError('Invalid credentials');
     }
 
-    async refresh(token: string) {
-        if (!token) throw new UnauthorizedError('Refresh token missing');
-    
-        try {
-            const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
-            const payload = await this.jwtService.verifyAsync(token, { secret: refreshSecret });
-          
-            const user = await this.usersService.findOne(payload.sub);
-            if (!user) throw new UnauthorizedError('User not found');
-    
-            const tokens = await this.issuePair(user);
-    
-            return { ...tokens, user };
-        } catch {
-            throw new UnauthorizedError('Invalid or expired refresh token');
-        }
+    await this.loginBlockService.clearFailures(email);
+
+    const tokens = await this.issuePair(user);
+
+    const { passwordHash: _passwordHash, ...publicUser } = user;
+
+    this.logger.info({ userId: user.id }, 'User logged in');
+
+    return { ...tokens, user: publicUser };
+  }
+
+  async issuePair(user: { id: number; role: string }) {
+    const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
+    const accessExpires = this.configService.get<string>('ACCESS_TTL');
+
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    const refreshExpires = this.configService.get<string>('REFRESH_TTL');
+
+    const accessToken = await this.jwtService.signAsync(
+      { sub: user.id, role: user.role },
+      { secret: accessSecret, expiresIn: accessExpires as any },
+    );
+
+    const refreshToken = await this.jwtService.signAsync(
+      { sub: user.id },
+      { secret: refreshSecret, expiresIn: refreshExpires as any },
+    );
+
+    return { accessToken, refreshToken };
+  }
+
+  async refresh(token: string) {
+    if (!token) throw new UnauthorizedError('Refresh token missing');
+
+    try {
+      const refreshSecret =
+        this.configService.get<string>('JWT_REFRESH_SECRET');
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: refreshSecret,
+      });
+
+      const user = await this.usersService.findOne(payload.sub);
+      if (!user) throw new UnauthorizedError('User not found');
+
+      const tokens = await this.issuePair(user);
+
+      return { ...tokens, user };
+    } catch {
+      throw new UnauthorizedError('Invalid or expired refresh token');
     }
+  }
 
-    async register(registerDto: RegisterDto) {
-        const { email, name, password, phone } = registerDto;
-        const existingUser = await this.usersService.findByEmail(email);
-        if (existingUser) throw new ConflictError('User with such an email already exists');
-    
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(password, salt);
-    
-        const newUser = await this.usersService.create({
-            email,
-            name,
-            passwordHash,
-            role: UserRole.client,
-            phone,
-            avatarFileName: null
-        });
-    
-        const tokens = await this.issuePair(newUser);
-    
-        return { ...tokens, user: newUser };
-    }
+  async register(registerDto: RegisterDto) {
+    const { email, name, password, phone } = registerDto;
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser)
+      throw new ConflictError('User with such an email already exists');
 
-    async changePassword(userId: number, currentPassword: string, newPassword: string) {
-        const user = await this.prisma.users.findUnique({
-            where: { id: userId },
-            select: { id: true, passwordHash: true },
-        });
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
 
-        if (!user) throw new UnauthorizedError('User not found');
+    const newUser = await this.usersService.create({
+      email,
+      name,
+      passwordHash,
+      role: UserRole.client,
+      phone,
+      avatarFileName: null,
+    });
 
-        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    const tokens = await this.issuePair(newUser);
 
-        if (!isCurrentPasswordValid) throw new UnauthorizedError('Invalid current password');
+    return { ...tokens, user: newUser };
+  }
 
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(newPassword, salt);
+  async changePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.users.findUnique({
+      where: { id: userId },
+      select: { id: true, passwordHash: true },
+    });
 
-        await this.prisma.users.update({
-            where: { id: user.id },
-            data: {
-                passwordHash,
-                updatedAt: new Date(),
-            },
-        });
+    if (!user) throw new UnauthorizedError('User not found');
 
-        return { message: 'Password changed' };
-    }
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
 
-    async getCurrentUser(userId: number) {
-        return this.usersService.findOne(userId);
-    }
+    if (!isCurrentPasswordValid)
+      throw new UnauthorizedError('Invalid current password');
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    await this.prisma.users.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        updatedAt: new Date(),
+      },
+    });
+
+    return { message: 'Password changed' };
+  }
+
+  async getCurrentUser(userId: number) {
+    return this.usersService.findOne(userId);
+  }
 }

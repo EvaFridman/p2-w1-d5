@@ -8,37 +8,43 @@ import { ErrorState } from "@/shared/ui/ErrorState/ErrorState";
 import styles from "./FavoritesList.module.css";
 
 type Props = {
-    listings: PublicListingType[];
-    isAuthenticated: boolean;
+  listings: PublicListingType[];
+  isAuthenticated: boolean;
 };
 
 export function FavoriteListings({ listings: serverListings, isAuthenticated }: Props) {
-    const { data: favoriteIds = [], isError, refetch } = useFavoriteIds(isAuthenticated);
+  const { data: favoriteIds = [], isError, refetch } = useFavoriteIds(isAuthenticated);
 
-    if (isError) {
-        return (
-            <ErrorState 
-                title="Не удалось загрузить избранное"
-                description="Попробуйте обновить список или повторить попытку позже."
-                action={<button type="button" onClick={() => refetch()}>Обновить</button>}
-            />
-        );
-    }
-
-    const activeListings = serverListings.filter((listing) => favoriteIds.includes(listing.id));
-
-    if (activeListings.length === 0) {
-        return (
-            <section className={styles.empty}>
-                <h3>В избранном пока ничего нет</h3>
-                <p>Добавляйте объявления в избранное, чтобы вернуться к ним позже.</p>
-            </section>
-        );
-    }
-
+  if (isError) {
     return (
-        <section className={styles.listings}>
-            {activeListings.map((listing) => (<ListingCard key={listing.id} listing={listing} isAuthenticated={isAuthenticated} />))}
-        </section>
+      <ErrorState
+        title="Не удалось загрузить избранное"
+        description="Попробуйте обновить список или повторить попытку позже."
+        action={
+          <button type="button" onClick={() => refetch()}>
+            Обновить
+          </button>
+        }
+      />
     );
+  }
+
+  const activeListings = serverListings.filter((listing) => favoriteIds.includes(listing.id));
+
+  if (activeListings.length === 0) {
+    return (
+      <section className={styles.empty}>
+        <h3>В избранном пока ничего нет</h3>
+        <p>Добавляйте объявления в избранное, чтобы вернуться к ним позже.</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className={styles.listings}>
+      {activeListings.map((listing) => (
+        <ListingCard key={listing.id} listing={listing} isAuthenticated={isAuthenticated} />
+      ))}
+    </section>
+  );
 }

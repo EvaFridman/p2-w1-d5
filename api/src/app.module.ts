@@ -1,6 +1,6 @@
 import { Module, Injectable, ExecutionContext, Inject } from '@nestjs/common';
 import { createObserveModule } from '@nestjs/observe';
-import { randomUUID } from "crypto";
+import { randomUUID } from 'crypto';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AppExceptionFilter } from './common/filters/app-exception.filter.js';
@@ -22,11 +22,15 @@ import { PublicModule } from './public/public.module.js';
 import { MailService } from './mail/mail.service.js';
 import { PdfService } from './pdf/pdf.service.js';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { ThrottlerModule, ThrottlerGuard, ThrottlerException } from "@nestjs/throttler";
+import {
+  ThrottlerModule,
+  ThrottlerGuard,
+  ThrottlerException,
+} from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { FilesModule } from './files/files.module.js';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { QueueModule } from "./queue/queue.module.js";
+import { QueueModule } from './queue/queue.module.js';
 import { RedisModule } from './redis/redis.module.js';
 import { TasksModule } from './tasks/tasks.module.js';
 import { PublicViewingRateLimitService } from './redis/public-viewing-rate-limit.service.js';
@@ -40,15 +44,13 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
   @Inject(PublicViewingRateLimitService)
   private readonly publicViewingRateLimitService: PublicViewingRateLimitService;
 
-  protected async handleRequest(
-    options: {
-      context: ExecutionContext;
-      limit: number;
-      ttl: number;
-      throttler: any;
-      blockDuration: number;
-    }
-  ): Promise<boolean> {
+  protected async handleRequest(options: {
+    context: ExecutionContext;
+    limit: number;
+    ttl: number;
+    throttler: any;
+    blockDuration: number;
+  }): Promise<boolean> {
     const { context, limit, ttl, throttler, blockDuration } = options;
     if (throttler.name === 'ws') {
       return true;
@@ -59,34 +61,58 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     const req = context.switchToHttp().getRequest();
     const url = req.url || '';
     const path = req.path || '';
-    
+
     const handler = context.getHandler();
     const classRef = context.getClass();
     const skip = this.reflector.getAllAndOverride<boolean>(
       `THROTTLER:SKIP${throttler.name}`,
       [handler, classRef],
     );
-    
+
     if (skip) return true;
-    
+
     if (throttler.name === 'api' && path === '/public/listings') return true;
 
     if (url.includes('/socket.io')) return true;
 
     const buildSecret = process.env.NEXT_BUILD_SECRET;
-    const buildRequest = req.headers["x-build-request"];
+    const buildRequest = req.headers['x-build-request'];
 
-    if (req.method === "GET" && buildSecret && buildRequest === buildSecret) return true;
+    if (req.method === 'GET' && buildSecret && buildRequest === buildSecret)
+      return true;
 
-    if (throttler.name === 'login' || throttler.name === 'register') return true;
-    if (throttler.name === 'viewing' && (!url.includes('/viewings') || /^\/public\/listings\/\d+\/viewings$/.test(path))) return true;
-    if (throttler.name === 'viewingPublic' && !/^\/public\/listings\/\d+\/viewings$/.test(path)) return true;
-    if (throttler.name === 'upload' && !url.includes('/photos') && !url.includes('/avatar')) return true;
+    if (throttler.name === 'login' || throttler.name === 'register')
+      return true;
+    if (
+      throttler.name === 'viewing' &&
+      (!url.includes('/viewings') ||
+        /^\/public\/listings\/\d+\/viewings$/.test(path))
+    )
+      return true;
+    if (
+      throttler.name === 'viewingPublic' &&
+      !/^\/public\/listings\/\d+\/viewings$/.test(path)
+    )
+      return true;
+    if (
+      throttler.name === 'upload' &&
+      !url.includes('/photos') &&
+      !url.includes('/avatar')
+    )
+      return true;
 
-    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const ip =
+      req.ip ||
+      req.headers['x-forwarded-for'] ||
+      req.socket.remoteAddress ||
+      '127.0.0.1';
 
     if (throttler.name === 'viewingPublic') {
-      const result = await this.publicViewingRateLimitService.check(ip, limit, ttl);
+      const result = await this.publicViewingRateLimitService.check(
+        ip,
+        limit,
+        ttl,
+      );
       if (!result.allowed) throw new ThrottlerException();
       return true;
     }
@@ -98,7 +124,7 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
       ttl,
       limit,
       blockDuration,
-      throttler.name
+      throttler.name,
     );
 
     if (totalHits > limit) throw new ThrottlerException();
@@ -115,16 +141,16 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     }),
     ThrottlerModule.forRootAsync({
       imports: [RedisModule],
-      inject: ["REDIS"],
+      inject: ['REDIS'],
       useFactory: (redis: Redis) => ({
         throttlers: [
-          { name: "api", ttl: 15 * 60_000, limit: 500 },
-          { name: "login", ttl: 15 * 60_000, limit: 10 },
-          { name: "register", ttl: 60 * 60_000, limit: 5 },
-          { name: "upload", ttl: 15 * 60_000, limit: 30 },
-          { name: "viewing", ttl: 60 * 60_000, limit: 20 },
-          { name: "viewingPublic", ttl: 15 * 60_000, limit: 5 },
-          { name: "ws", ttl: 1000, limit: 100 },
+          { name: 'api', ttl: 15 * 60_000, limit: 500 },
+          { name: 'login', ttl: 15 * 60_000, limit: 10 },
+          { name: 'register', ttl: 60 * 60_000, limit: 5 },
+          { name: 'upload', ttl: 15 * 60_000, limit: 30 },
+          { name: 'viewing', ttl: 60 * 60_000, limit: 20 },
+          { name: 'viewingPublic', ttl: 15 * 60_000, limit: 5 },
+          { name: 'ws', ttl: 1000, limit: 100 },
         ],
         storage: new ThrottlerStorageRedisService(redis),
       }),
@@ -147,17 +173,29 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     TasksModule,
     LoggerModule.forRoot({
       pinoHttp: {
-        level: process.env.LOG_LEVEL ?? "info",
-        transport: process.env.LOGDY !== "true" && process.env.NODE_ENV !== "production" ? { target: "pino-pretty", options: { singleLine: true } } : undefined,
-        redact: ["req.headers.authorization", "req.headers.cookie", "*.password", "*.passwordHash", "*.refreshToken"],
+        level: process.env.LOG_LEVEL ?? 'info',
+        transport:
+          process.env.LOGDY !== 'true' && process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { singleLine: true } }
+            : undefined,
+        redact: [
+          'req.headers.authorization',
+          'req.headers.cookie',
+          '*.password',
+          '*.passwordHash',
+          '*.refreshToken',
+        ],
         autoLogging: true,
         genReqId: (req, res) => {
-            const requestId = typeof req.headers["x-request-id"] === "string" ? req.headers["x-request-id"] : randomUUID();
-            res.setHeader("x-request-id", requestId);
-            return requestId;
+          const requestId =
+            typeof req.headers['x-request-id'] === 'string'
+              ? req.headers['x-request-id']
+              : randomUUID();
+          res.setHeader('x-request-id', requestId);
+          return requestId;
         },
         customProps: () => ({
-            process: process.env.LOG_PROCESS ?? "api",
+          process: process.env.LOG_PROCESS ?? 'api',
         }),
       },
     }),
@@ -171,7 +209,7 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     MailService,
-    PdfService
+    PdfService,
   ],
 })
-export class AppModule { }
+export class AppModule {}
