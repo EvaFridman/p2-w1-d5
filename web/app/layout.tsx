@@ -1,7 +1,7 @@
 import { ReactNode, Suspense } from "react";
 import type { Metadata } from "next";
 
-import "./globals.css";
+import "./globals.scss";
 
 import { QueryProvider } from "@/_app/providers/query-provider"; 
 import { AppStoreProvider } from "@/shared/providers/app-store-provider";

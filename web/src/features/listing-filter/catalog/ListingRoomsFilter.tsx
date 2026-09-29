@@ -1,4 +1,4 @@
-import styles from "./ListingsFilter.module.css";
+import styles from "./ListingsFilter.module.scss";
 
 type Props = {
     selectedRooms: string[];

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/shared/providers/app-store-provider";
-import styles from "./Header.module.css";
+import styles from "./Header.module.scss";
 
 export function RecentlyViewed() {
     const ids = useAppStore((state) => state.recentlyViewedIds);
