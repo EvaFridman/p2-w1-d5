@@ -1,0 +1,6 @@
+{
+  "api/**/*.ts": ["eslint --fix --max-warnings=0", "prettier --write"],
+  "web/**/*.{ts,tsx}": ["eslint --fix --max-warnings=0", "prettier --write"],
+  "web/**/*.{css,scss}": ["stylelint --fix --max-warnings=0", "prettier --write"],
+  "*.{json,md,yml}": ["prettier --write"]
+}
