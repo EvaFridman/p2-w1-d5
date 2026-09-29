@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PdfService } from '../pdf/pdf.service.js';
 import { PublisherService } from '../queue/publisher.service.js';
+import { PinoLogger } from 'nestjs-pino';
 import { ListingStatus } from '../generated/prisma/index.js';
 
 type FindManyArgs = {
@@ -20,6 +21,12 @@ describe('ListingsService', () => {
   let service: ListingsService;
   const findMany = jest.fn<(args: FindManyArgs) => Promise<{ id: number }[]>>();
   const prisma = { listings: { findMany } };
+
+  const mockPinoLogger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 
   beforeEach(async () => {
     findMany.mockReset();
@@ -47,6 +54,10 @@ describe('ListingsService', () => {
           provide: PublisherService,
           useValue: {},
         },
+        {
+          provide: PinoLogger,
+          useValue: mockPinoLogger,
+        },
       ],
     }).compile();
 
@@ -67,8 +78,8 @@ describe('ListingsService', () => {
     const firstResult = await service.expireOldListings();
     const secondResult = await service.expireOldListings();
 
-    expect(firstResult).toBe(2);
-    expect(secondResult).toBe(0);
+    expect(firstResult.processed).toBe(2);
+    expect(secondResult.processed).toBe(0);
     expect(updateStatus).toHaveBeenCalledTimes(2);
   });
 
@@ -79,7 +90,7 @@ describe('ListingsService', () => {
       .mockResolvedValue({});
     const result = await service.expireOldListings();
 
-    expect(result).toBe(1);
+    expect(result.processed).toBe(1);
     expect(updateStatus).toHaveBeenCalledWith(
       10,
       { status: ListingStatus.UNPUBLISHED },

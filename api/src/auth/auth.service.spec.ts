@@ -4,6 +4,9 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service.js';
 import { UsersService } from '../users/users.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { LoginBlockService } from '../redis/login-block.service.js';
+import { PinoLogger } from 'nestjs-pino';
 import { UnauthorizedError } from '../errors/app.exception.js';
 import * as bcrypt from 'bcryptjs';
 
@@ -39,6 +42,19 @@ describe('AuthService', () => {
     }),
   };
 
+  const mockPrismaService = {};
+  const mockLoginBlockService = {
+    getBlockTtl: jest.fn(() => Promise.resolve(0)),
+    recordFailure: jest.fn(() => Promise.resolve()),
+    clearFailures: jest.fn(() => Promise.resolve()),
+  };
+  const mockPinoLogger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    setContext: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -46,6 +62,9 @@ describe('AuthService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: LoginBlockService, useValue: mockLoginBlockService },
+        { provide: PinoLogger, useValue: mockPinoLogger },
       ],
     }).compile();
 
