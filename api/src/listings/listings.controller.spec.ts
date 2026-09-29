@@ -1,12 +1,41 @@
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ListingsController } from './listings.controller.js';
+import { ListingsService } from './listings.service.js';
+import { ViewingsService } from '../viewings/viewings.service.js';
+import { ListingOwnerGuard } from './guards/listing-owner.guard.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 describe('ListingsController', () => {
   let controller: ListingsController;
 
+  const mockListingsService = {
+    findAll: jest.fn(),
+    getListingsBundleStream: jest.fn(),
+    create: jest.fn(),
+    findOne: jest.fn(),
+    update: jest.fn(),
+    updateStatus: jest.fn(),
+    findPhotos: jest.fn(),
+    updatePhoto: jest.fn(),
+    uploadPhotos: jest.fn(),
+    deletePhoto: jest.fn(),
+    getListingPdfStream: jest.fn(),
+  };
+
+  const mockViewingsService = {
+    findAll: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ListingsController],
+      providers: [
+        { provide: ListingsService, useValue: mockListingsService },
+        { provide: ViewingsService, useValue: mockViewingsService },
+        { provide: PrismaService, useValue: {} },
+        ListingOwnerGuard,
+      ],
     }).compile();
 
     controller = module.get<ListingsController>(ListingsController);
