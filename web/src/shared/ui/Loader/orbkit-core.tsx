@@ -68,10 +68,7 @@ function targetVolumes(state: OrbState, t: number): [number, number] {
     case "idle":
       return [0, 0.3];
     case "speaking":
-      return [
-        clamp01(0.65 + Math.sin(t * 4.8) * 0.22),
-        clamp01(0.75 + Math.sin(t * 3.6) * 0.22)
-      ];
+      return [clamp01(0.65 + Math.sin(t * 4.8) * 0.22), clamp01(0.75 + Math.sin(t * 3.6) * 0.22)];
     case "thinking": {
       const base = 0.38 + 0.07 * Math.sin(t * 0.7);
       const wander = 0.05 * Math.sin(t * 2.1) * Math.sin(t * 0.37 + 1.2);
@@ -140,7 +137,7 @@ export function defaultValuesFor(variant: OrbVariant): {
 } {
   return {
     params: Object.fromEntries(variant.params.map((p) => [p.key, p.default])),
-    colors: Object.fromEntries(variant.colors.map((c) => [c.key, c.default]))
+    colors: Object.fromEntries(variant.colors.map((c) => [c.key, c.default])),
   };
 }
 
@@ -208,7 +205,7 @@ vec3 tanh3(vec3 x) {
 function paramUniformDecls(variant: OrbVariant): string {
   return [
     ...variant.params.map((p) => `uniform float uP_${p.key};`),
-    ...variant.colors.map((c) => `uniform vec3 uC_${c.key};`)
+    ...variant.colors.map((c) => `uniform vec3 uC_${c.key};`),
   ].join("\n");
 }
 
@@ -276,7 +273,7 @@ export const ORB_WRAPPERS = [
   "reticle",
   "grid",
   "halftone",
-  "scanlines"
+  "scanlines",
 ] as const;
 
 export type OrbWrapper = (typeof ORB_WRAPPERS)[number];
@@ -335,7 +332,7 @@ const DISC: CSSProperties = { borderRadius: "50%" };
 function Layer({
   inset = 0,
   style,
-  className
+  className,
 }: {
   inset?: number | string;
   style: CSSProperties;
@@ -401,7 +398,7 @@ const svgLayer: CSSProperties = {
   width: "100%",
   height: "100%",
   pointerEvents: "none",
-  overflow: "visible"
+  overflow: "visible",
 };
 
 /** Glass's overfill, shared by its inset and the mask derived from it. */
@@ -439,7 +436,7 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
           style={{
             ...DISC,
             background:
-              "radial-gradient(ellipse 80% 70% at 28% 20%, rgba(255,255,255,0.16), rgba(255,255,255,0.03) 45%, rgba(255,255,255,0) 72%)"
+              "radial-gradient(ellipse 80% 70% at 28% 20%, rgba(255,255,255,0.16), rgba(255,255,255,0.03) 45%, rgba(255,255,255,0) 72%)",
           }}
         />
         <Layer
@@ -447,13 +444,13 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
             ...DISC,
             background:
               "radial-gradient(circle closest-side, rgba(255,255,255,0) 0%, rgba(255,255,255,0.0) 55%, rgba(255,255,255,0.05) 99.5%, rgba(255,255,255,0) 100%)",
-              overflow: 'hidden'
+            overflow: "hidden",
           }}
         />
         <Layer
           style={{
             ...DISC,
-           boxShadow: '3px 6px 10px #ffffff20 inset'
+            boxShadow: "3px 6px 10px #ffffff20 inset",
           }}
         />
         {/*
@@ -466,14 +463,14 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
           style={{
             ...DISC,
             background:
-              "radial-gradient(circle closest-side, rgba(0,0,0,0) 78%, rgba(0,0,0,0.05) 93%, rgba(0,0,0,0.02) 100%)"
+              "radial-gradient(circle closest-side, rgba(0,0,0,0) 78%, rgba(0,0,0,0.05) 93%, rgba(0,0,0,0.02) 100%)",
           }}
         />
         <Layer
           style={{
             ...DISC,
             boxShadow:
-              "inset 0 6px 12px -7px rgba(255,255,255,0.05), inset 0 -9px 16px -9px rgba(255,255,255,0.1), 0 0 0 1px rgba(0,0,0,0.07)"
+              "inset 0 6px 12px -7px rgba(255,255,255,0.05), inset 0 -9px 16px -9px rgba(255,255,255,0.1), 0 0 0 1px rgba(0,0,0,0.07)",
           }}
         />
         <Highlight
@@ -485,12 +482,11 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
             transform: "rotate(-25deg)",
             background:
               "radial-gradient(closest-side, rgba(255,255,255,0.9), rgba(255,255,255,0.3) 55%, rgba(255,255,255,0) 100%)",
-              filter: 'blur(10px)'
+            filter: "blur(10px)",
           }}
         />
-       
       </>
-    )
+    ),
   },
 
   /* ring — two hairlines and nothing else. The restrained one. */
@@ -501,7 +497,7 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
         <Layer style={{ ...DISC, border: "1px solid currentColor", opacity: 0.22 }} />
         <Layer inset="5%" style={{ ...DISC, border: "1px solid currentColor", opacity: 0.1 }} />
       </>
-    )
+    ),
   },
 
   /*
@@ -536,7 +532,7 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
           opacity={0.45}
         />
       </svg>
-    )
+    ),
   },
 
   /*
@@ -556,8 +552,8 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
             background:
               "repeating-conic-gradient(from -0.5deg, transparent 0deg 0.2deg, currentColor 0.4deg 0.6deg, transparent 0.8deg 6deg)",
             ...masked(
-              "radial-gradient(circle closest-side, transparent 88%, #000 90%, #000 97%, transparent 99%)"
-            )
+              "radial-gradient(circle closest-side, transparent 88%, #000 90%, #000 97%, transparent 99%)",
+            ),
           }}
         />
         <Layer
@@ -567,13 +563,13 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
             background:
               "repeating-conic-gradient(from -0.75deg, transparent 0deg 0.25deg, currentColor 0.5deg 1deg, transparent 1.25deg 30deg)",
             ...masked(
-              "radial-gradient(circle closest-side, transparent 80%, #000 82%, #000 97%, transparent 99%)"
-            )
+              "radial-gradient(circle closest-side, transparent 80%, #000 82%, #000 97%, transparent 99%)",
+            ),
           }}
         />
         <Layer style={{ ...DISC, border: "1px solid currentColor", opacity: 0.12 }} />
       </>
-    )
+    ),
   },
 
   /* reticle — viewfinder furniture: corner brackets, cardinal ticks, a track. */
@@ -603,7 +599,7 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
           opacity="0.22"
         />
       </svg>
-    )
+    ),
   },
 
   /*
@@ -628,11 +624,11 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
           opacity: 0.18,
           backgroundImage:
             "repeating-linear-gradient(to right, currentColor 0 1px, transparent 1px 12.5%), repeating-linear-gradient(to bottom, currentColor 0 1px, transparent 1px 12.5%)",
-          ...masked("radial-gradient(circle closest-side, #000 86%, rgba(0,0,0,0) 99%)")
+          ...masked("radial-gradient(circle closest-side, #000 86%, rgba(0,0,0,0) 99%)"),
         }}
       />
     ),
-    over: <Layer style={{ ...DISC, border: "1px solid currentColor", opacity: 0.2 }} />
+    over: <Layer style={{ ...DISC, border: "1px solid currentColor", opacity: 0.2 }} />,
   },
 
   /*
@@ -650,11 +646,11 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
           backgroundImage: "radial-gradient(currentColor 22%, transparent 24%)",
           backgroundSize: "7px 7px",
           ...masked(
-            "radial-gradient(circle closest-side, transparent 40%, #000 80%, #000 94%, rgba(0,0,0,0) 100%)"
-          )
+            "radial-gradient(circle closest-side, transparent 40%, #000 80%, #000 94%, rgba(0,0,0,0) 100%)",
+          ),
         }}
       />
-    )
+    ),
   },
 
   /*
@@ -673,7 +669,7 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
             ...DISC,
             backgroundImage:
               "repeating-linear-gradient(to bottom, rgba(0,0,0,0.45) 0 1px, rgba(0,0,0,0) 1px 3px)",
-            ...masked("radial-gradient(circle closest-side, #000 84%, rgba(0,0,0,0) 100%)")
+            ...masked("radial-gradient(circle closest-side, #000 84%, rgba(0,0,0,0) 100%)"),
           }}
         />
         <span
@@ -683,7 +679,7 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
             inset: 0,
             borderRadius: "50%",
             overflow: "hidden",
-            pointerEvents: "none"
+            pointerEvents: "none",
           }}
         >
           <span
@@ -696,14 +692,14 @@ const WRAPPER_SPECS: Record<Exclude<OrbWrapper, "none">, WrapperSpec> = {
               height: "30%",
               background:
                 "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0) 100%)",
-              animation: "orbkit-w-roll 7s linear infinite"
+              animation: "orbkit-w-roll 7s linear infinite",
             }}
           />
         </span>
         <Layer style={{ ...DISC, boxShadow: "inset 0 0 40px -8px rgba(0,0,0,0.5)" }} />
       </>
-    )
-  }
+    ),
+  },
 };
 
 export interface ShaderOrbProps {
@@ -797,7 +793,7 @@ export function ShaderOrb({
   wrapperColor,
   className,
   style,
-  ariaLabel
+  ariaLabel,
 }: ShaderOrbProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const spec = wrapper === "none" ? undefined : WRAPPER_SPECS[wrapper];
@@ -855,7 +851,7 @@ export function ShaderOrb({
       // primitive edges to antialias — softness comes from the shaders. Leaving
       // it on costs the multisample buffers plus a resolve every frame.
       antialias: false,
-      premultipliedAlpha: true
+      premultipliedAlpha: true,
     });
     if (!gl) return;
 
@@ -881,7 +877,7 @@ export function ShaderOrb({
       const fs = compile(
         gl,
         gl.FRAGMENT_SHADER,
-        ORB_GLSL_HELPERS + paramUniformDecls(variant) + variant.frag
+        ORB_GLSL_HELPERS + paramUniformDecls(variant) + variant.frag,
       );
       const releaseShaders = () => {
         if (vs) gl.deleteShader(vs);
@@ -919,11 +915,11 @@ export function ShaderOrb({
 
       const paramLocs = variant.params.map((p) => ({
         def: p,
-        loc: gl.getUniformLocation(prog, `uP_${p.key}`)
+        loc: gl.getUniformLocation(prog, `uP_${p.key}`),
       }));
       const colorLocs = variant.colors.map((c) => ({
         def: c,
-        loc: gl.getUniformLocation(prog, `uC_${c.key}`)
+        loc: gl.getUniformLocation(prog, `uC_${c.key}`),
       }));
 
       /* --- sizing: track the element box, not a one-shot measurement ------- */
@@ -968,7 +964,7 @@ export function ShaderOrb({
                   last = performance.now() / 1000;
                 }
               },
-              { rootMargin: "150px 0px", threshold: 0 }
+              { rootMargin: "150px 0px", threshold: 0 },
             )
           : null;
       if (intersectionObserver) {
@@ -1092,7 +1088,7 @@ export function ShaderOrb({
             liveColors?.[def.key] ??
               overrideColor?.[def.key] ??
               stateColor?.[def.key] ??
-              def.default
+              def.default,
           );
           const curCol = (colorCur[def.key] ??= [...target] as [number, number, number]);
           const velCol = (colorVel[def.key] ??= [0, 0, 0]);
@@ -1365,8 +1361,7 @@ export function ShaderOrb({
     */
   }, [variant, pauseOffscreen, maxDpr, wrapped]);
 
-  const sizeStyle: CSSProperties =
-    size === undefined ? {} : { width: size, height: size };
+  const sizeStyle: CSSProperties = size === undefined ? {} : { width: size, height: size };
 
   /*
     Spread ahead of the caller's `style`, so an orb that wants to own its own
@@ -1397,7 +1392,7 @@ export function ShaderOrb({
               width: `${100 - 2 * spec.inset}%`,
               height: `${100 - 2 * spec.inset}%`,
               ...revealStyle,
-              ...(spec.mask ? masked(spec.mask) : {})
+              ...(spec.mask ? masked(spec.mask) : {}),
             }
           : { display: "block", ...sizeStyle, ...revealStyle, ...style }
       }
@@ -1429,7 +1424,7 @@ export function ShaderOrb({
         ...(spec.shadow ? { borderRadius: "50%", boxShadow: spec.shadow } : {}),
         ...sizeStyle,
         ...(wrapperColor ? { color: wrapperColor } : {}),
-        ...style
+        ...style,
       }}
       role={ariaLabel ? "img" : undefined}
       aria-label={ariaLabel}

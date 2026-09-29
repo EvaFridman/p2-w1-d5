@@ -9,7 +9,7 @@ describe('ViewingsService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ViewingsService, 
+        ViewingsService,
         { provide: PrismaService, useValue: {} },
         { provide: ConfigService, useValue: {} },
       ],

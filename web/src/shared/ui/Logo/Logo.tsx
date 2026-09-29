@@ -1,5 +1,5 @@
 import styles from "./Logo.module.css";
 
 export function Logo() {
-    return <div className={styles.logo}>В</div>
+  return <div className={styles.logo}>В</div>;
 }

@@ -3,7 +3,14 @@ import { FilesService } from './files.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import fs from 'fs/promises';
 import path from 'path';
-import { jest, describe, beforeEach, afterEach, it, expect } from '@jest/globals';
+import {
+  jest,
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+} from '@jest/globals';
 
 describe('FilesService', () => {
   let service: FilesService;
@@ -47,7 +54,9 @@ describe('FilesService', () => {
     const result = await service.removeOrphaned();
 
     expect(result).toBe(1);
-    expect(fs.unlink).toHaveBeenCalledWith(path.resolve('./uploads/photos/orphan.jpg'));
+    expect(fs.unlink).toHaveBeenCalledWith(
+      path.resolve('./uploads/photos/orphan.jpg'),
+    );
   });
 
   it('should not delete files attached to a listing', async () => {

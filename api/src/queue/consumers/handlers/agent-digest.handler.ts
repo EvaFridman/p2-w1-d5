@@ -1,65 +1,74 @@
-import type { PrismaService } from "../../../prisma/prisma.service.js";
-import type { MailService } from "../../../mail/mail.service.js";
-import type { MailPayload } from "../mail.consumer.js";
+import type { PrismaService } from '../../../prisma/prisma.service.js';
+import type { MailService } from '../../../mail/mail.service.js';
+import type { MailPayload } from '../mail.consumer.js';
 
-export async function handleAgentDigest(payload: MailPayload, prisma: PrismaService, mailService: MailService): Promise<string> {
-    const agentId = payload.agentId;
-    const periodFrom = payload.periodFrom;
-    const periodTo = payload.periodTo;
+export async function handleAgentDigest(
+  payload: MailPayload,
+  prisma: PrismaService,
+  mailService: MailService,
+): Promise<string> {
+  const agentId = payload.agentId;
+  const periodFrom = payload.periodFrom;
+  const periodTo = payload.periodTo;
 
-    if (!agentId || !periodFrom || !periodTo) return "skipped";
+  if (!agentId || !periodFrom || !periodTo) return 'skipped';
 
-    const from = new Date(periodFrom);
-    const to = new Date(periodTo);
+  const from = new Date(periodFrom);
+  const to = new Date(periodTo);
 
-    const agent = await prisma.users.findUnique({ where: { id: agentId } });
+  const agent = await prisma.users.findUnique({ where: { id: agentId } });
 
-    if (!agent || !agent.email) return "skipped";
+  if (!agent || !agent.email) return 'skipped';
 
-    const [viewings, statusChanges] = await Promise.all([
-        prisma.viewings.findMany({
-            where: {
-                createdAt: {
-                    gte: from,
-                    lt: to,
-                },
-                listing: {
-                    agentId,
-                },
-            },
-            include: {
-                listing: {
-                    select: {
-                        id: true,
-                        title: true,
-                    },
-                },
-            },
-            orderBy: { createdAt: "asc" },
-        }),
-        prisma.listingStatusHistory.findMany({
-            where: {
-                agentId,
-                createdAt: {
-                    gte: from,
-                    lt: to,
-                },
-            },
-            include: {
-                listing: {
-                    select: {
-                        id: true,
-                        title: true,
-                    },
-                },
-            },
-            orderBy: { createdAt: "asc" },
-        }),
-    ]);
+  const [viewings, statusChanges] = await Promise.all([
+    prisma.viewings.findMany({
+      where: {
+        createdAt: {
+          gte: from,
+          lt: to,
+        },
+        listing: {
+          agentId,
+        },
+      },
+      include: {
+        listing: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.listingStatusHistory.findMany({
+      where: {
+        agentId,
+        createdAt: {
+          gte: from,
+          lt: to,
+        },
+      },
+      include: {
+        listing: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ]);
 
-    if (viewings.length === 0 && statusChanges.length === 0) return "skipped";
+  if (viewings.length === 0 && statusChanges.length === 0) return 'skipped';
 
-    await mailService.sendAgentDigest(agent, { from, to }, viewings, statusChanges);
+  await mailService.sendAgentDigest(
+    agent,
+    { from, to },
+    viewings,
+    statusChanges,
+  );
 
-    return "processed";
+  return 'processed';
 }

@@ -10,7 +10,7 @@
   padding-block: var(--space-12);
 }
 
-.heroContent>p {
+.heroContent > p {
   max-width: 620px;
   color: rgba(255, 255, 255, 0.72);
 }

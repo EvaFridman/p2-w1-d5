@@ -8,12 +8,20 @@ describe('RolesGuard', () => {
   let guard: RolesGuard;
   let reflector: Reflector;
 
-  beforeEach(() => { reflector = new Reflector(); guard = new RolesGuard(reflector) });
+  beforeEach(() => {
+    reflector = new Reflector();
+    guard = new RolesGuard(reflector);
+  });
 
-  const createMockContext = (userRole?: string, routeRoles?: string[]): ExecutionContext => {
+  const createMockContext = (
+    userRole?: string,
+    routeRoles?: string[],
+  ): ExecutionContext => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(routeRoles);
 
-    const mockRequest = { user: userRole ? { id: 1, role: userRole } : undefined };
+    const mockRequest = {
+      user: userRole ? { id: 1, role: userRole } : undefined,
+    };
 
     return {
       switchToHttp: () => ({

@@ -7,7 +7,7 @@ import { ForbiddenError } from '../../errors/app.exception.js';
 
 @Injectable()
 export class WsRolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) { }
+  constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
     const roles = this.reflector.get<UserRole[]>('roles', context.getHandler());
@@ -18,7 +18,11 @@ export class WsRolesGuard implements CanActivate {
 
     if (!user || !roles.includes(user.role as UserRole)) {
       const errorInstance = new ForbiddenError();
-      throw new WsException({ message: errorInstance.message, details: null, code: 'FORBIDDEN'});
+      throw new WsException({
+        message: errorInstance.message,
+        details: null,
+        code: 'FORBIDDEN',
+      });
     }
 
     return true;

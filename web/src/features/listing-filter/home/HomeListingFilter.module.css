@@ -1,97 +1,97 @@
 .form {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    border-radius: var(--radius-lg);
-    background-color: var(--color-surface);
-    color: var(--color-text);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .dealType {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-1);
-    padding: var(--space-1);
-    border-radius: var(--radius-md);
-    background-color: var(--color-surface-secondary);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-secondary);
 }
 
 .button,
 .active,
 .submit {
-    min-height: var(--control-height-md);
-    border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
+  min-height: var(--control-height-md);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .button {
-    background-color: transparent;
-    color: var(--color-text-secondary);
+  background-color: transparent;
+  color: var(--color-text-secondary);
 }
 
 .button:hover {
-    color: var(--color-text);
+  color: var(--color-text);
 }
 
 .active {
-    background-color: var(--color-secondary);
-    color: var(--color-secondary-text);
+  background-color: var(--color-secondary);
+  color: var(--color-secondary-text);
 }
 
 .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .field span {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
 }
 
 .field input,
 .field select {
-    width: 100%;
-    min-height: var(--control-height-md);
-    padding-inline: var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-surface);
-    color: var(--color-text);
+  width: 100%;
+  min-height: var(--control-height-md);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .price {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
 }
 
 .submit {
-    background-color: var(--color-primary);
-    color: var(--color-primary-text);
-    font-weight: var(--font-weight-semibold);
+  background-color: var(--color-primary);
+  color: var(--color-primary-text);
+  font-weight: var(--font-weight-semibold);
 }
 
 .submit:hover {
-    background-color: var(--color-primary-hover);
+  background-color: var(--color-primary-hover);
 }
 
 @media (min-width: 768px) {
-    .form {
-        grid-template-columns: auto 1fr 1fr 1.5fr auto;
-        align-items: end;
-        gap: var(--space-3);
-        padding: var(--space-5);
-    }
+  .form {
+    grid-template-columns: auto 1fr 1fr 1.5fr auto;
+    align-items: end;
+    gap: var(--space-3);
+    padding: var(--space-5);
+  }
 
-    .dealType {
-        align-self: end;
-    }
+  .dealType {
+    align-self: end;
+  }
 
-    .price {
-        min-width: 220px;
-    }
+  .price {
+    min-width: 220px;
+  }
 }

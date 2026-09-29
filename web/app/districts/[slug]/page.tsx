@@ -6,21 +6,21 @@ import { ListingsPage } from "@/_pages/listings/ListingsPage";
 type SearchParams = Record<string, string | string[] | undefined>;
 
 type Props = {
-    params: Promise<{ slug: string }>;
-    searchParams: Promise<SearchParams>;
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<SearchParams>;
 };
 
 export default async function DistrictPage({ params, searchParams }: Props) {
-    const { slug } = await params;
-    const paramsFromUrl = await searchParams;
+  const { slug } = await params;
+  const paramsFromUrl = await searchParams;
 
-    let district;
+  let district;
 
-    try {
-        district = await districtApi.getDistrictBySlug(slug);
-    } catch {
-        notFound();
-    }
+  try {
+    district = await districtApi.getDistrictBySlug(slug);
+  } catch {
+    notFound();
+  }
 
-    return <ListingsPage searchParams={paramsFromUrl} lockedDistrict={district} />;
+  return <ListingsPage searchParams={paramsFromUrl} lockedDistrict={district} />;
 }

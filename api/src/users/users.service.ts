@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
-import { PrismaService } from "../prisma/prisma.service.js";
+import { PrismaService } from '../prisma/prisma.service.js';
 import fs from 'fs';
 import path from 'path';
 import { NotFoundError, ValidationError } from '../errors/app.exception.js';
@@ -10,19 +10,26 @@ import type { User, PublicUser } from './users.types.js';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService, private readonly configService: ConfigService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   private formatPublicUser(user: any): PublicUser {
     const { passwordHash: _passwordHash, ...publicUser } = user;
-    
+
     const baseUrl = this.configService.get<string>('PUBLIC_URL');
 
-    const avatarUrl = user.avatarFileName ? `${baseUrl}/files/avatars/${user.avatarFileName}` : `${baseUrl}/static/default-avatar.webp`;
+    const avatarUrl = user.avatarFileName
+      ? `${baseUrl}/files/avatars/${user.avatarFileName}`
+      : `${baseUrl}/static/default-avatar.webp`;
 
     return { ...publicUser, avatarUrl } as PublicUser;
   }
 
-  async create(data: CreateUserDto & { passwordHash?: string }): Promise<PublicUser> {
+  async create(
+    data: CreateUserDto & { passwordHash?: string },
+  ): Promise<PublicUser> {
     const user = await this.prisma.users.create({
       data: {
         name: data.name,
@@ -39,12 +46,20 @@ export class UsersService {
     return this.formatPublicUser(user);
   }
 
-  async findAll(page?: number, limit?: number, role?: 'agent' | 'moderator' | 'client') {
-    const pageSizeDefault = Number(this.configService.get<number>('PAGE_SIZE_DEFAULT') ?? 20);
-    const pageSizeMax = Number(this.configService.get<number>('PAGE_SIZE_MAX') ?? 100);
+  async findAll(
+    page?: number,
+    limit?: number,
+    role?: 'agent' | 'moderator' | 'client',
+  ) {
+    const pageSizeDefault = Number(
+      this.configService.get<number>('PAGE_SIZE_DEFAULT') ?? 20,
+    );
+    const pageSizeMax = Number(
+      this.configService.get<number>('PAGE_SIZE_MAX') ?? 100,
+    );
 
-    const finalPage = (!page || page < 1) ? 1 : page;
-    let finalLimit = (!limit || limit < 1) ? pageSizeDefault : limit;
+    const finalPage = !page || page < 1 ? 1 : page;
+    let finalLimit = !limit || limit < 1 ? pageSizeDefault : limit;
     if (finalLimit > pageSizeMax) finalLimit = pageSizeMax;
 
     const whereCondition = role ? { role } : {};
@@ -55,13 +70,16 @@ export class UsersService {
         skip: (finalPage - 1) * finalLimit,
         take: finalLimit,
       }),
-      this.prisma.users.count({ where: whereCondition })
+      this.prisma.users.count({ where: whereCondition }),
     ]);
 
     const totalPages = total > 0 ? Math.ceil(total / finalLimit) : 0;
-    const publicItems = items.map(user => this.formatPublicUser(user));
+    const publicItems = items.map((user) => this.formatPublicUser(user));
 
-    return { items: publicItems, meta: { page: finalPage, limit: finalLimit, total, totalPages } };
+    return {
+      items: publicItems,
+      meta: { page: finalPage, limit: finalLimit, total, totalPages },
+    };
   }
 
   async findOne(id: number): Promise<PublicUser> {
@@ -80,14 +98,20 @@ export class UsersService {
 
   async update(id: number, data: UpdateUserDto): Promise<PublicUser> {
     try {
-      const updatedUser = await this.prisma.users.update({ where: { id }, data: { ...data, updatedAt: new Date() } });
+      const updatedUser = await this.prisma.users.update({
+        where: { id },
+        data: { ...data, updatedAt: new Date() },
+      });
       return this.formatPublicUser(updatedUser);
     } catch {
       throw new NotFoundError('User not found');
     }
   }
 
-  async updateAvatar(userId: number, file: Express.Multer.File): Promise<PublicUser> {
+  async updateAvatar(
+    userId: number,
+    file: Express.Multer.File,
+  ): Promise<PublicUser> {
     if (!file) throw new ValidationError('File is required');
     const user = await this.prisma.users.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundError('User not found');

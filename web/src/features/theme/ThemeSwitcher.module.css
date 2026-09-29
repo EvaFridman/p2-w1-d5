@@ -1,54 +1,54 @@
 .footer {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .header {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-1);
-    margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+  margin-left: auto;
 }
 
 .label {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .buttons {
-    display: flex;
-    gap: var(--space-1);
+  display: flex;
+  gap: var(--space-1);
 }
 
 .header .buttons {
-    flex-direction: column;
+  flex-direction: column;
 }
 
 .button,
 .active {
-    min-height: var(--control-height-sm);
-    padding-inline: var(--space-3);
-    border: 1px solid var(--color-theme-button-border);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-theme-button-bg);
-    color: var(--color-theme-button-text);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    white-space: nowrap;
-    transition:
-        background-color var(--transition-fast),
-        color var(--transition-fast),
-        border-color var(--transition-fast);
+  min-height: var(--control-height-sm);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-theme-button-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-theme-button-bg);
+  color: var(--color-theme-button-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .button:hover {
-    background-color: var(--color-surface-secondary);
+  background-color: var(--color-surface-secondary);
 }
 
 .active {
-    border-color: var(--color-theme-active-bg);
-    background-color: var(--color-theme-active-bg);
-    color: var(--color-theme-active-text);
+  border-color: var(--color-theme-active-bg);
+  background-color: var(--color-theme-active-bg);
+  color: var(--color-theme-active-text);
 }

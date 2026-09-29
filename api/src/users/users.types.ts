@@ -1,4 +1,7 @@
-import { Users, UserRole as PrismaUserRole } from '../generated/prisma/index.js';
+import {
+  Users,
+  UserRole as PrismaUserRole,
+} from '../generated/prisma/index.js';
 
 export type UserRole = PrismaUserRole;
 

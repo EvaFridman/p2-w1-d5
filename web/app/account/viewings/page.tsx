@@ -7,18 +7,18 @@ import { Loader } from "@/shared/ui";
 import { ViewingsList } from "@/_pages/viewings/ViewingsList";
 
 async function AccountViewingsContent() {
-    const session = await getSession();
-    if (!session)  redirect("/login?returnUrl=/account/viewings");
-    const isAuthenticated = session !== null;
-    const viewings = await getMyViewings();
+  const session = await getSession();
+  if (!session) redirect("/login?returnUrl=/account/viewings");
+  const isAuthenticated = session !== null;
+  const viewings = await getMyViewings();
 
-    return <ViewingsList initialData={viewings} isAuthenticated={isAuthenticated} />;
+  return <ViewingsList initialData={viewings} isAuthenticated={isAuthenticated} />;
 }
 
 export default function AccountViewingsPage() {
-    return (
-        <Suspense fallback={<Loader />}>
-            <AccountViewingsContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={<Loader />}>
+      <AccountViewingsContent />
+    </Suspense>
+  );
 }

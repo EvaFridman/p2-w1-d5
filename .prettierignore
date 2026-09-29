@@ -1,0 +1,10 @@
+dist
+.next
+node_modules
+package-lock.json
+api/src/generated
+api/.claude
+server
+server_v2.0
+admin-client
+admin-client_v2.0

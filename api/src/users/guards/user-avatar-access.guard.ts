@@ -9,8 +9,13 @@ export class UserAvatarAccessGuard implements CanActivate {
     const user = request.user;
     const targetUserId = parseInt(request.params.id, 10);
     if (isNaN(targetUserId)) return false;
-    if (user.role === UserRole.moderator || user.id === targetUserId) return true;
+    if (user.role === UserRole.moderator || user.id === targetUserId)
+      return true;
 
-    throw new ForbiddenError('You can only manage your own avatar', null, 'FORBIDDEN');
+    throw new ForbiddenError(
+      'You can only manage your own avatar',
+      null,
+      'FORBIDDEN',
+    );
   }
 }

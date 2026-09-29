@@ -1,56 +1,56 @@
 .menu {
-    position: relative;
+  position: relative;
 }
 
 .trigger {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    color: var(--color-text);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    cursor: pointer;
-    list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  list-style: none;
 }
 
 .trigger::-webkit-details-marker {
-    display: none;
+  display: none;
 }
 
 .arrow {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .dropdown {
-    position: absolute;
-    top: calc(100% + var(--space-2));
-    right: 0;
-    z-index: 10;
-    display: flex;
-    min-width: 160px;
-    flex-direction: column;
-    padding: var(--space-1);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-surface);
-    box-shadow: var(--shadow-md);
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 10;
+  display: flex;
+  min-width: 160px;
+  flex-direction: column;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-md);
 }
 
 .item {
-    display: block;
-    width: 100%;
-    padding: var(--space-2) var(--space-3);
-    border: 0;
-    background: none;
-    color: var(--color-text);
-    font: inherit;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .item:hover {
-    border-radius: var(--radius-sm);
-    background-color: var(--color-surface-secondary);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-secondary);
 }

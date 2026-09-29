@@ -7,7 +7,7 @@ export type Props = {
   icon?: ReactNode;
   action?: ReactNode;
   className?: string;
-}
+};
 
 export function EmptyState({ title, description, action, className = "" }: Props) {
   return (
@@ -18,5 +18,5 @@ export function EmptyState({ title, description, action, className = "" }: Props
 
       {action && <div className={styles.action}>{action}</div>}
     </section>
-  )
+  );
 }

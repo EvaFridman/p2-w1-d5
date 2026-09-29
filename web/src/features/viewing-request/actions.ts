@@ -8,62 +8,66 @@ import { apiFetch } from "@/shared/api/api-fetch";
 import { ApiError } from "@/shared/api/errors";
 
 type ViewingRequestActionState = {
-    fieldErrors?: Record<string, string[]>;
-    error?: string;
-    success?: boolean;
+  fieldErrors?: Record<string, string[]>;
+  error?: string;
+  success?: boolean;
 };
 
-export async function createViewingRequest(listingId: number, _: ViewingRequestActionState, formData: FormData): Promise<ViewingRequestActionState> {
-    const session = await getSession();
-    const isClient = session?.user.role === "client";
-    const isEditing = formData.get("editContact") === "true";
+export async function createViewingRequest(
+  listingId: number,
+  _: ViewingRequestActionState,
+  formData: FormData,
+): Promise<ViewingRequestActionState> {
+  const session = await getSession();
+  const isClient = session?.user.role === "client";
+  const isEditing = formData.get("editContact") === "true";
 
-    const formValues = {
-        name: isClient && !isEditing ? session.user.name : String(formData.get("name") ?? ""),
-        phone: isClient && !isEditing ? session.user.phone : String(formData.get("phone") ?? ""),
-        email: isClient && !isEditing ? session.user.email : String(formData.get("email") ?? ""),
-        date: String(formData.get("date") ?? ""),
-        time: String(formData.get("time") ?? ""),
-        comment: String(formData.get("comment") ?? ""),
-    };
+  const formValues = {
+    name: isClient && !isEditing ? session.user.name : String(formData.get("name") ?? ""),
+    phone: isClient && !isEditing ? session.user.phone : String(formData.get("phone") ?? ""),
+    email: isClient && !isEditing ? session.user.email : String(formData.get("email") ?? ""),
+    date: String(formData.get("date") ?? ""),
+    time: String(formData.get("time") ?? ""),
+    comment: String(formData.get("comment") ?? ""),
+  };
 
-    const result = viewingRequestSchema.safeParse(formValues);
+  const result = viewingRequestSchema.safeParse(formValues);
 
-    if (!result.success) {
-        const fieldErrors: Record<string, string[]> = {};
+  if (!result.success) {
+    const fieldErrors: Record<string, string[]> = {};
 
-        result.error.issues.forEach((issue) => {
-            const field = issue.path[0];
-            if (typeof field !== "string") return;
-            fieldErrors[field] ??= [];
-            fieldErrors[field].push(issue.message);
-        });
+    result.error.issues.forEach((issue) => {
+      const field = issue.path[0];
+      if (typeof field !== "string") return;
+      fieldErrors[field] ??= [];
+      fieldErrors[field].push(issue.message);
+    });
 
-        return { fieldErrors };
+    return { fieldErrors };
+  }
+
+  const { name, phone, email, date, time, comment } = result.data;
+
+  try {
+    await apiFetch(`/public/listings/${listingId}/viewings`, {
+      method: "POST",
+      body: {
+        clientName: name,
+        clientPhone: phone,
+        clientEmail: email,
+        preferredAt: `${date}T${time}:00`,
+        comment: comment || undefined,
+      },
+    });
+
+    revalidatePath(`/listings/${listingId}`);
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 429) {
+      return { error: "Вы отправили слишком много заявок. Попробуйте позже." };
     }
 
-    const { name, phone, email, date, time, comment } = result.data;
-
-    try {
-        await apiFetch(`/public/listings/${listingId}/viewings`, {
-            method: "POST",
-            body: {
-                clientName: name,
-                clientPhone: phone,
-                clientEmail: email,
-                preferredAt: `${date}T${time}:00`,
-                comment: comment || undefined,
-            },
-        });
-
-        revalidatePath(`/listings/${listingId}`);
-
-        return { success: true };
-    } catch (error) {
-        if (error instanceof ApiError && error.status === 429) {
-            return { error: "Вы отправили слишком много заявок. Попробуйте позже." };
-        }
-
-        return { error: "Не удалось отправить заявку. Попробуйте ещё раз." };
-    }
+    return { error: "Не удалось отправить заявку. Попробуйте ещё раз." };
+  }
 }

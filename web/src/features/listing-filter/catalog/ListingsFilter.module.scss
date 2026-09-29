@@ -1,178 +1,188 @@
 @use "@/shared/styles" as s;
 
 .panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-    padding: var(--space-5);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background-color: var(--color-surface);
-    @include s.from(tablet) { padding: var(--space-4); }
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  @include s.from(tablet) {
+    padding: var(--space-4);
+  }
 }
 
 .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .header h2 {
-    font-size: var(--font-size-lg);
+  font-size: var(--font-size-lg);
 }
 
 .reset {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-    &:hover { color: var(--color-text); }
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  &:hover {
+    color: var(--color-text);
+  }
 }
 
 .fieldset {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: var(--space-3);
-    padding: 0;
-    border: 0;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0;
+  border: 0;
 }
 
 .fieldset legend {
-    margin-bottom: var(--space-1);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .dealTypes {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-2);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
 }
 
 .dealButton,
 .dealActive {
-    min-height: var(--control-height-md);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-    color: var(--color-text);
+  min-height: var(--control-height-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .dealActive,
 .roomActive {
-    border-color: var(--color-primary);
-    background-color: var(--color-primary);
-    color: var(--color-primary-text);
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .options {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .option,
 .district {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 28px;
-    font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+  font-size: var(--font-size-sm);
 }
 
 .option input,
 .district input {
-    width: 16px;
-    height: 16px;
-    margin: 0;
-    accent-color: var(--color-primary);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-primary);
 }
 
 .searchInput,
 .range input {
-    width: 100%;
-    min-height: var(--control-height-md);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-surface);
-    color: var(--color-text);
-    font-size: var(--font-size-sm);
-    &::placeholder { color: var(--color-text-muted); }
+  width: 100%;
+  min-height: var(--control-height-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
 }
 
 .searchInput {
-    padding-inline: var(--space-3);
+  padding-inline: var(--space-3);
 }
 
 .districts {
-    display: flex;
-    max-height: 220px;
-    flex-direction: column;
-    gap: var(--space-1);
-    overflow-y: auto;
+  display: flex;
+  max-height: 220px;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-y: auto;
 }
 
 .district {
-    padding-block: var(--space-1);
+  padding-block: var(--space-1);
 }
 
 .districtTitle {
-    flex: 1;
-    min-width: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .districtCount {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
 }
 
 .range {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-2);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
 }
 
 .range input {
-    padding-inline: var(--space-3);
+  padding-inline: var(--space-3);
 }
 
 .rooms {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
 }
 
 .room,
 .roomActive {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: var(--control-height-md);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-height-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
 }
 
 .room input,
 .roomActive input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .submit {
-    min-height: 48px;
-    margin-top: var(--space-1);
-    border: 0;
-    border-radius: var(--radius-md);
-    background-color: var(--color-primary);
-    color: var(--color-primary-text);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    transition: background-color var(--transition-fast);
-    &:hover { background-color: var(--color-primary-hover); }
-    &:active { background-color: var(--color-primary-active); }
+  min-height: 48px;
+  margin-top: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition: background-color var(--transition-fast);
+  &:hover {
+    background-color: var(--color-primary-hover);
+  }
+  &:active {
+    background-color: var(--color-primary-active);
+  }
 }

@@ -1,6 +1,6 @@
 import { PipeTransform, Injectable } from '@nestjs/common';
 import path from 'path';
-import { ValidationError } from '../../errors/app.exception.js'; 
+import { ValidationError } from '../../errors/app.exception.js';
 
 @Injectable()
 export class PhotoValidationPipe implements PipeTransform {
@@ -13,10 +13,21 @@ export class PhotoValidationPipe implements PipeTransform {
     const files = Array.isArray(value) ? value : [value];
 
     for (const file of files) {
-      if (file.size > this.MAX_SIZE) throw new ValidationError('File is too large', null, 'FILE_TOO_LARGE');
-      if (!this.ALLOWED_MIME_TYPES.test(file.mimetype)) throw new ValidationError('Unsupported file type', null, 'UNSUPPORTED_FILE_TYPE');
+      if (file.size > this.MAX_SIZE)
+        throw new ValidationError('File is too large', null, 'FILE_TOO_LARGE');
+      if (!this.ALLOWED_MIME_TYPES.test(file.mimetype))
+        throw new ValidationError(
+          'Unsupported file type',
+          null,
+          'UNSUPPORTED_FILE_TYPE',
+        );
       const ext = path.extname(file.originalname).toLowerCase();
-      if (!this.ALLOWED_EXTENSIONS.includes(ext)) throw new ValidationError('Unsupported file extension', null, 'UNSUPPORTED_FILE_TYPE');
+      if (!this.ALLOWED_EXTENSIONS.includes(ext))
+        throw new ValidationError(
+          'Unsupported file extension',
+          null,
+          'UNSUPPORTED_FILE_TYPE',
+        );
     }
 
     return value;

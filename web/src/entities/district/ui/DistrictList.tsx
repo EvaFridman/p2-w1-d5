@@ -5,18 +5,18 @@ import { formatListingsCount } from "@/shared/lib/format";
 import styles from "./DistrictList.module.css";
 
 type Props = {
-    districts: PublicDistrictType[];
+  districts: PublicDistrictType[];
 };
 
 export function DistrictList({ districts }: Props) {
-    return (
-        <section className={styles.list}>
-            {districts.map((district) => (
-                <Link key={district.id} href={`/districts/${district.slug}`} className={styles.item}>
-                    <h3>{district.title}</h3>
-                    <span>{formatListingsCount(district.publishedListingsCount)}</span>
-                </Link>
-            ))}
-        </section>
-    );
+  return (
+    <section className={styles.list}>
+      {districts.map((district) => (
+        <Link key={district.id} href={`/districts/${district.slug}`} className={styles.item}>
+          <h3>{district.title}</h3>
+          <span>{formatListingsCount(district.publishedListingsCount)}</span>
+        </Link>
+      ))}
+    </section>
+  );
 }

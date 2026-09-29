@@ -1,6 +1,7 @@
 import { IsEnum, IsOptional } from 'class-validator';
 
 export class PdfQueryDto {
-  @IsOptional() @IsEnum(['view', 'download'])
+  @IsOptional()
+  @IsEnum(['view', 'download'])
   mode?: 'view' | 'download' = 'view';
 }
