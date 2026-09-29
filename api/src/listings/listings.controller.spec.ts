@@ -3,6 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ListingsController } from './listings.controller.js';
 import { ListingsService } from './listings.service.js';
 import { ViewingsService } from '../viewings/viewings.service.js';
+import { ListingOwnerGuard } from './guards/listing-owner.guard.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 describe('ListingsController', () => {
   let controller: ListingsController;
@@ -31,6 +33,8 @@ describe('ListingsController', () => {
       providers: [
         { provide: ListingsService, useValue: mockListingsService },
         { provide: ViewingsService, useValue: mockViewingsService },
+        { provide: PrismaService, useValue: {} },
+        ListingOwnerGuard,
       ],
     }).compile();
 
