@@ -7,8 +7,9 @@
 .content {
   display: grid;
   grid-template-columns: 1fr;
-  align-items: start;
   gap: var(--space-6);
+  align-items: start;
+
   padding-block: var(--space-8);
 }
 
@@ -24,8 +25,8 @@
 
 .mainInfo p {
   max-width: 280px;
-  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .content > :nth-child(2),
@@ -33,7 +34,7 @@
   justify-self: start;
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .content {
     grid-template-columns: 1fr auto 1fr;
     gap: var(--space-8);

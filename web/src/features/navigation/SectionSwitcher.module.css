@@ -1,13 +1,13 @@
 .header {
   display: flex;
-  align-items: center;
   gap: var(--space-6);
+  align-items: center;
 }
 
 .link {
-  color: var(--color-text);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-regular);
+  color: var(--color-text);
   transition: color var(--transition-fast);
 }
 
@@ -16,8 +16,8 @@
 }
 
 .active {
-  color: var(--color-text);
   font-weight: var(--font-weight-medium);
+  color: var(--color-text);
 }
 
 .header .active {
@@ -34,9 +34,9 @@
 
 .footer .link,
 .footer .active {
-  color: var(--color-accent);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-regular);
+  color: var(--color-accent);
   transition: color var(--transition-fast);
 }
 
