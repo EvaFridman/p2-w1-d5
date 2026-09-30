@@ -12,7 +12,11 @@ import {
   ViewingStatus,
   Prisma,
 } from '../generated/prisma/index.js';
-import { NotFoundError, ConflictError } from '../errors/app.exception.js';
+import {
+  NotFoundError,
+  ConflictError,
+  ExternalServiceError,
+} from '../errors/app.exception.js';
 import { CacheService } from '../redis/cache.service.js';
 import { generateCatalogCacheKey } from '../redis/catalog-key.helper.js';
 import { generateDistrictsCacheKey } from '../redis/districts-key.helper.js';
@@ -93,7 +97,7 @@ export class PublicService {
     }
 
     if (redisAvailable && !hasLock)
-      throw new Error('Failed to acquire cache lock');
+      throw new ExternalServiceError('Failed to acquire cache lock');
 
     try {
       if (redisAvailable) {

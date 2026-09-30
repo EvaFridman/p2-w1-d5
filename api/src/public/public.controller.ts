@@ -12,6 +12,7 @@ import {
 import { Public } from '../auth/decorators/public.decorator.js';
 import { OptionalAuth } from '../auth/decorators/optional-auth.decorator.js';
 import { PublicService } from './public.service.js';
+import { UnauthorizedError } from '../errors/app.exception.js';
 import { PublicListingsDto } from './dto/public-listings.dto.js';
 import { ListDistrictsDto } from '../districts/dto/list-districts.dto.js';
 import { CreateViewingDto } from '../viewings/dto/create-viewing.dto.js';
@@ -120,7 +121,7 @@ export class PublicController {
     @Query() query: ListViewingsDto,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.publicService.findMyViewings(query, request.user);
   }
 
@@ -134,7 +135,7 @@ export class PublicController {
   @ApiResponse({ status: 401, description: 'Токен отсутствует или невалиден' })
   @Get('favorites')
   async findAllFavorites(@Req() request: Request) {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.publicService.findAllFavorites(request.user);
   }
 
@@ -150,7 +151,7 @@ export class PublicController {
     @Param('id', ParseIntPipe) listingId: number,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.publicService.addFavorite(listingId, request.user);
   }
 
@@ -169,7 +170,7 @@ export class PublicController {
     @Param('id', ParseIntPipe) listingId: number,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.publicService.removeFavorite(listingId, request.user);
   }
 

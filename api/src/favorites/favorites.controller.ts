@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { FavoritesService } from './favorites.service.js';
+import { UnauthorizedError } from '../errors/app.exception.js';
 import { ListFavoritesDto } from './dto/list-favorites.dto.js';
 import type { Request } from 'express';
 import {
@@ -50,12 +51,9 @@ export class FavoritesController {
     @Param('listingId', ParseIntPipe) listingId: number,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing in request');
-    return await this.favoritesService.add(
-      userId,
-      listingId,
-      request.user,
-    );
+    if (!request.user)
+      throw new UnauthorizedError('User context is missing in request');
+    return await this.favoritesService.add(userId, listingId, request.user);
   }
 
   @ApiOperation({ summary: 'Удалить объявление из избранного пользователя' })
@@ -79,12 +77,9 @@ export class FavoritesController {
     @Param('listingId', ParseIntPipe) listingId: number,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing in request');
-    return await this.favoritesService.remove(
-      userId,
-      listingId,
-      request.user,
-    );
+    if (!request.user)
+      throw new UnauthorizedError('User context is missing in request');
+    return await this.favoritesService.remove(userId, listingId, request.user);
   }
 
   @ApiOperation({
@@ -107,11 +102,8 @@ export class FavoritesController {
     @Query() query: ListFavoritesDto,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing in request');
-    return await this.favoritesService.findAll(
-      userId,
-      query,
-      request.user,
-    );
+    if (!request.user)
+      throw new UnauthorizedError('User context is missing in request');
+    return await this.favoritesService.findAll(userId, query, request.user);
   }
 }

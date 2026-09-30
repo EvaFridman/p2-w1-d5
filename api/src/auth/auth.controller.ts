@@ -11,6 +11,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service.js';
+import { UnauthorizedError } from '../errors/app.exception.js';
 import { LoginDto } from './dto/login.dto.js';
 import ms, { StringValue } from 'ms';
 import { RegisterDto } from './dto/register.dto.js';
@@ -128,7 +129,8 @@ export class AuthController {
   @Get('me')
   async me(@Req() request: Request) {
     const userId = request.user?.id;
-    if (!userId) throw new Error('User not found in request context');
+    if (!userId)
+      throw new UnauthorizedError('User not found in request context');
     return this.authService.getCurrentUser(userId);
   }
 
@@ -149,7 +151,8 @@ export class AuthController {
     @Req() request: Request,
   ) {
     const userId = request.user?.id;
-    if (!userId) throw new Error('User not found in request context');
+    if (!userId)
+      throw new UnauthorizedError('User not found in request context');
     return await this.authService.changePassword(
       userId,
       dto.currentPassword,

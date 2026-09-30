@@ -16,6 +16,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { ListingsService } from './listings.service.js';
+import { UnauthorizedError } from '../errors/app.exception.js';
 import { ListListingsDto } from './dto/list-listings.dto.js';
 import { CreateListingDto } from './dto/create-listing.dto.js';
 import { UpdateListingDto } from './dto/update-listing.dto.js';
@@ -48,7 +49,7 @@ export class ListingsController {
   constructor(
     private readonly listingsService: ListingsService,
     private readonly viewingsService: ViewingsService,
-  ) { }
+  ) {}
 
   @ApiOperation({
     summary: 'Получить список объявлений с фильтрацией и пагинацией',
@@ -131,7 +132,7 @@ export class ListingsController {
     @Param('id', ParseIntPipe) id: number,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.listingsService.findOne(id, request.user);
   }
 
@@ -177,7 +178,7 @@ export class ListingsController {
     @Body() dto: UpdateListingDto,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.listingsService.update(id, dto, request.user);
   }
 
@@ -355,7 +356,7 @@ export class ListingsController {
     @Req() request: Request,
     @Response({ passthrough: true }) res: ExpressResponse,
   ): Promise<StreamableFile> {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     const pdfStream = await this.listingsService.getListingPdfStream(
       id,
       request.user,
