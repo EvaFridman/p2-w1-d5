@@ -4,6 +4,7 @@ import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateViewingDto } from './dto/create-viewing.dto.js';
 import { ListViewingsDto } from './dto/list-viewings.dto.js';
+import { RecentViewingsDto } from './dto/recent-viewings.dto.js';
 import { UpdateStatusDto } from './dto/update-status.dto.js';
 import {
   canTransition,
@@ -75,7 +76,8 @@ export class ViewingsService {
     if (finalLimit > pageSizeMax) finalLimit = pageSizeMax;
 
     const whereCondition: Prisma.ViewingsWhereInput = {};
-    if (dto.status) whereCondition.status = dto.status.toUpperCase() as ViewingStatus;
+    if (dto.status)
+      whereCondition.status = dto.status.toUpperCase() as ViewingStatus;
     if (dto.listingId) whereCondition.listingId = dto.listingId;
 
     if (user.role === UserRole.agent)
@@ -118,6 +120,27 @@ export class ViewingsService {
       ...viewing,
       allowedTransitions: getAllowedTransitions(viewing.status),
     };
+  }
+
+  async findRecentByAgent(agentId: number, dto: RecentViewingsDto) {
+    const agent = await this.prisma.users.findUnique({
+      where: { id: agentId },
+      select: { role: true },
+    });
+    if (!agent || agent.role !== UserRole.agent)
+      throw new NotFoundError('Agent not found');
+
+    const viewings = await this.prisma.viewings.findMany({
+      where: { listing: { agentId } },
+      take: dto.limit ?? 5,
+      include: { listing: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return viewings.map((viewing) => ({
+      ...viewing,
+      allowedTransitions: getAllowedTransitions(viewing.status),
+    }));
   }
 
   async sendUpcomingReminders(): Promise<number> {
@@ -174,9 +197,9 @@ export class ViewingsService {
           );
         }
 
-        const updateData: Prisma.ViewingsUpdateInput = { 
-          status: dto.status, 
-          updatedAt: new Date() 
+        const updateData: Prisma.ViewingsUpdateInput = {
+          status: dto.status,
+          updatedAt: new Date(),
         };
         const triggerStatuses: ViewingStatus[] = [
           ViewingStatus.APPROVED,

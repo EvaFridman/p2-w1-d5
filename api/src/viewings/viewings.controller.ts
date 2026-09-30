@@ -8,9 +8,12 @@ import {
   Body,
   Req,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { ViewingsService } from './viewings.service.js';
 import { ListViewingsDto } from './dto/list-viewings.dto.js';
+import { RecentViewingsDto } from './dto/recent-viewings.dto.js';
+import { AgentSelfGuard } from './guards/agent-self.guard.js';
 import { CreateViewingDto } from './dto/create-viewing.dto.js';
 import { UpdateStatusDto } from './dto/update-status.dto.js';
 import { Public } from '../auth/decorators/public.decorator.js';
@@ -41,6 +44,30 @@ export class ViewingsController {
   async findAll(@Query() query: ListViewingsDto, @Req() request: Request) {
     if (!request.user) throw new Error('User context is missing');
     return await this.viewingsService.findAll(query, request.user);
+  }
+
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: 'Получить последние заявки на показ по объявлениям агента',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Последние заявки агента, от новых к старым',
+  })
+  @ApiResponse({ status: 400, description: 'Некорректный лимит (от 1 до 50)' })
+  @ApiResponse({ status: 401, description: 'Токен отсутствует или невалидный' })
+  @ApiResponse({
+    status: 403,
+    description: 'Доступ запрещен (агент может смотреть только свои заявки)',
+  })
+  @ApiResponse({ status: 404, description: 'Агент не найден' })
+  @UseGuards(AgentSelfGuard)
+  @Get('agents/:id/viewings/recent')
+  async findRecentByAgent(
+    @Param('id', ParseIntPipe) agentId: number,
+    @Query() query: RecentViewingsDto,
+  ) {
+    return await this.viewingsService.findRecentByAgent(agentId, query);
   }
 
   @ApiBearerAuth('bearer')
@@ -106,10 +133,6 @@ export class ViewingsController {
     @Req() request: Request,
   ) {
     if (!request.user) throw new Error('User context is missing');
-    return await this.viewingsService.updateStatus(
-      id,
-      dto,
-      request.user,
-    );
+    return await this.viewingsService.updateStatus(id, dto, request.user);
   }
 }
