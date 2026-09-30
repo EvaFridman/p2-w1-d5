@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ViewingsService } from './viewings.service.js';
+import { UnauthorizedError } from '../errors/app.exception.js';
 import { ListViewingsDto } from './dto/list-viewings.dto.js';
 import { RecentViewingsDto } from './dto/recent-viewings.dto.js';
 import { AgentSelfGuard } from './guards/agent-self.guard.js';
@@ -42,7 +43,7 @@ export class ViewingsController {
   @ApiResponse({ status: 401, description: 'Токен отсутствует или невалидный' })
   @Get('viewings')
   async findAll(@Query() query: ListViewingsDto, @Req() request: Request) {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.viewingsService.findAll(query, request.user);
   }
 
@@ -87,7 +88,7 @@ export class ViewingsController {
     @Param('id', ParseIntPipe) id: number,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.viewingsService.findOne(id, request.user);
   }
 
@@ -132,7 +133,7 @@ export class ViewingsController {
     @Body() dto: UpdateStatusDto,
     @Req() request: Request,
   ) {
-    if (!request.user) throw new Error('User context is missing');
+    if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.viewingsService.updateStatus(id, dto, request.user);
   }
 }

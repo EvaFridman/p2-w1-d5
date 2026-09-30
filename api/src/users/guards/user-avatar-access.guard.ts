@@ -8,7 +8,8 @@ export class UserAvatarAccessGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     const targetUserId = parseInt(request.params.id, 10);
-    if (isNaN(targetUserId)) return false;
+    // ParseIntPipe rejects a non-numeric id with 400 after the guard runs.
+    if (isNaN(targetUserId)) return true;
     if (user.role === UserRole.moderator || user.id === targetUserId)
       return true;
 
