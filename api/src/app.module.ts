@@ -73,14 +73,21 @@ export class GlobalThrottlerGuard extends ThrottlerGuard {
     const buildSecret = process.env.NEXT_BUILD_SECRET;
     const buildRequest = req.headers['x-build-request'];
 
-    if (req.method === 'GET' && buildSecret && buildRequest === buildSecret) return true;
-    if (throttler.name === 'login' || throttler.name === 'register') return true;
+    if (req.method === 'GET' && buildSecret && buildRequest === buildSecret)
+      return true;
+    if (throttler.name === 'login' || throttler.name === 'register')
+      return true;
     if (
       throttler.name === 'viewing' &&
-      (!url.includes('/viewings') || /^\/public\/listings\/\d+\/viewings\$/.test(path))
+      (!url.includes('/viewings') ||
+        /^\/public\/listings\/\d+\/viewings$/.test(path))
     )
       return true;
-    if (throttler.name === 'viewingPublic' && !/^\/public\/listings\/\d+\/viewings\$/.test(path)) return true;
+    if (
+      throttler.name === 'viewingPublic' &&
+      !/^\/public\/listings\/\d+\/viewings$/.test(path)
+    )
+      return true;
     if (
       throttler.name === 'upload' &&
       !url.includes('/photos') &&
