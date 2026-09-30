@@ -11,7 +11,8 @@ export class ListingOwnerGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     const listingId = parseInt(request.params.id, 10);
-    if (isNaN(listingId)) return false;
+    // ParseIntPipe rejects a non-numeric id with 400 after the guard runs.
+    if (isNaN(listingId)) return true;
     if (user.role === UserRole.moderator) return true;
     const listing = await this.prisma.listings.findUnique({
       where: { id: listingId },
