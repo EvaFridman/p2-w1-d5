@@ -142,3 +142,6 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 .DS_Store
+
+# Claude Code personal overrides (shared settings live in .claude/settings.json)
+.claude/settings.local.json
