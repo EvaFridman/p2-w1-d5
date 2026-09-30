@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Read-only reviewer for this repo. Use to review a diff or changed files against the project rules in CLAUDE.md: Nest/FSD layers, error handling, tests, conventions. Returns findings with file paths and never edits files. Pass it the path to a saved diff, or the changed files and base commit.
+description: "Read-only reviewer for this repo. Use to review a diff or changed files against the project rules in CLAUDE.md: Nest/FSD layers, error handling, tests, conventions. Returns findings with file paths and never edits files. Pass it the path to a saved diff, or the changed files and base commit."
 tools: Read, Grep, Glob
 model: haiku
 ---
