@@ -89,8 +89,11 @@ Being built in p3-w4-d4; files below may not exist yet. Check before referring t
 - Named volumes: Postgres data, Redis data, `uploads` (mounted into both `api` and `worker`).
 - Secrets come from untracked env files at run time; never `COPY`/`ARG`/`ENV` them into an image.
   Keep `api/.env.example` and `web/.env.example` complete when adding variables.
-- Temporal server and `start:temporal-worker` are not in compose. Its address is `TEMPORAL_ADDRESS`;
+- Temporal server and `start:temporal-worker` are not in the dev compose. Its address is `TEMPORAL_ADDRESS`;
   unset means the SDK default (localhost, port 7233), so never write that address in code.
+- `deploy/docker-compose.server.yml` is the third overlay, for the production server only: `caddy`
+  (HTTPS, the only service publishing ports), `temporal` (`start-dev`, SQLite on a volume),
+  `temporal-worker` (`api` image, needs `uploads`). Ansible and server steps: `deploy/README.md`.
 
 ## Before calling work done (from root)
 

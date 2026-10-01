@@ -50,6 +50,11 @@ services:
     command: !reset null
     environment:
       NODE_ENV: production
+      # Server-side Sentry; the browser's DSN and environment are baked in at build time.
+      # Empty SENTRY_DSN turns it off.
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_RELEASE: ${IMAGE_TAG}
     volumes: !reset []
     healthcheck:
       timeout: 5s

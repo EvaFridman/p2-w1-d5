@@ -39,4 +39,16 @@ ssh realty 'timeout 5 bash -c "</dev/tcp/smtp.yandex.ru/587" && echo smtp ok'
 
 Если `docker pull` не проходит (ограничения Docker Hub), впишите зеркало в `group_vars/prod/vars.yml` — `docker_registry_mirrors: ["https://mirror.gcr.io"]` — и запустите `ansible-playbook base.yml` ещё раз.
 
+## Стек на сервере
+
+На сервере работают три compose-файла: `docker-compose.yml`, `docker-compose.prod.yml` и `deploy/docker-compose.server.yml`. Третий добавляет то, что нужно только серверу:
+
+- `caddy` — HTTPS перед `web`: сам получает и продлевает сертификат Let's Encrypt для `SITE_DOMAIN`, перенаправляет `http://` и `www.` на `https://<домен>`. Сертификаты лежат в томе `caddydata`.
+- `temporal` — сервер Temporal (`start-dev`) с историей workflow в файле на томе `temporaldata`; без веб-интерфейса, наружу не открыт.
+- `temporal-worker` — образ `api` с командой `node dist/temporal/worker.js` и томом `uploads` (задача `cleanup` удаляет фото без объявлений).
+
+`web` наружу не публикуется, к нему ходит только Caddy. В `.env` на сервере: `TEMPORAL_ADDRESS=temporal:7233`, `SITE_DOMAIN`, `SENTRY_DSN`.
+
+Sentry витрины: DSN и окружение для браузера вшиваются при сборке образа (переменная репозитория `NEXT_PUBLIC_SENTRY_DSN`, в CI окружение `production`), серверная часть читает `SENTRY_DSN` и `SENTRY_ENVIRONMENT` (по умолчанию `production`) при запуске.
+
 Docker открывает опубликованные порты контейнеров в обход `ufw`, поэтому в продакшене порт публикует только Caddy (80/443), остальные сервисы доступны лишь внутри сети compose.
