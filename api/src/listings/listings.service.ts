@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { ListListingsDto } from './dto/list-listings.dto.js';
 import { CreateListingDto } from './dto/create-listing.dto.js';
 import { UpdateListingDto } from './dto/update-listing.dto.js';
-import { UpdateStatusDto } from './dto/update-status.dto.js';
+import { UpdateListingStatusDto } from './dto/update-listing-status.dto.js';
 import { UpdatePhotoDto } from './dto/update-photo.dto.js';
 import { buildListingsWhere } from './listings.where.js';
 import {
@@ -186,7 +186,7 @@ export class ListingsService {
 
   async updateStatus(
     id: number,
-    dto: UpdateStatusDto,
+    dto: UpdateListingStatusDto,
     options?: { expired?: boolean },
   ): Promise<unknown> {
     try {

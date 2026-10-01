@@ -20,7 +20,7 @@ import { UnauthorizedError } from '../errors/app.exception.js';
 import { ListListingsDto } from './dto/list-listings.dto.js';
 import { CreateListingDto } from './dto/create-listing.dto.js';
 import { UpdateListingDto } from './dto/update-listing.dto.js';
-import { UpdateStatusDto } from './dto/update-status.dto.js';
+import { UpdateListingStatusDto } from './dto/update-listing-status.dto.js';
 import { UpdatePhotoDto } from './dto/update-photo.dto.js';
 import type { Request } from 'express';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -205,7 +205,7 @@ export class ListingsController {
   @Patch(':id/status')
   async updateStatus(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateStatusDto,
+    @Body() dto: UpdateListingStatusDto,
   ) {
     return await this.listingsService.updateStatus(id, dto);
   }

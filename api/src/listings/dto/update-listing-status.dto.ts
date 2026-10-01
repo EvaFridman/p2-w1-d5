@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 import { ListingStatus } from '../../generated/prisma/index.js';
 
-export class UpdateStatusDto {
+export class UpdateListingStatusDto {
   @IsNotEmpty()
   @IsString()
   @IsEnum(ListingStatus, {
