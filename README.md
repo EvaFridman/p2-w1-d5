@@ -67,7 +67,7 @@ Postgres.app на машине — старая копия, с которой п
 Образы собираются заранее и помечаются хешем коммита — так видно, что именно запущено, а откат сводится к запуску предыдущего тега. Сборка витрины заранее рендерит страницы и обращается к API, поэтому во время сборки должен работать `api` на порту `3000` (например, стек для разработки):
 
 ```bash
-export IMAGE_TAG=$(git rev-parse --short HEAD)
+export IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 set -a; . ./.env; set +a
 
 docker build -t realty-api:$IMAGE_TAG api
@@ -93,6 +93,25 @@ IMAGE_TAG=<тег запущенных образов> docker compose -f docker-
 ```
 
 Возврат к разработке — `docker compose up -d`: контейнеры пересоздаются по `docker-compose.yml`, тома с данными общие.
+
+#### Образы из CI
+
+Задача `images` в `.github/workflows/ci.yml` собирает оба образа на каждом pull request и проверяет их: поднимает файл перекрытий и открывает каталог. После вливания в `main` образы публикуются в GitHub Container Registry с тегом — первыми семью символами хеша коммита:
+
+- `ghcr.io/evafridman/realty-api:<хеш>`
+- `ghcr.io/evafridman/realty-web:<хеш>`
+
+Pull request образы только собирает и не публикует. Для входа в реестр CI использует встроенный секрет `GITHUB_TOKEN`, в файлах учётных данных нет. Адрес сайта для `NEXT_PUBLIC_*` витрины берётся из переменной репозитория `SITE_URL` (Settings → Secrets and variables → Actions → Variables), без неё — `http://localhost:3001`.
+
+Запуск опубликованных образов (пакеты приватные, нужен токен GitHub с правом `read:packages`):
+
+```bash
+echo "<токен>" | docker login ghcr.io -u <логин GitHub> --password-stdin
+export IMAGE_REGISTRY=ghcr.io/evafridman/ IMAGE_TAG=<хеш коммита в main>
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+Ту же сборку и проверку можно запустить локально: `./scripts/ci-build-images.sh` (освободите порты `3000` и `3001`; скрипт работает в отдельном проекте `realty-ci` и рабочие данные не трогает).
 
 Один и тот же образ `api` поднимается на стенде и в проде, отличаясь только переменными: для каждого окружения свой файл (`--env-file .env.staging`, `--env-file .env.production`). Секреты передаются при запуске и в образ не попадают. Исключение — `NEXT_PUBLIC_*` витрины: они вшиваются в бандл при сборке, поэтому образ `web` собирается для каждого окружения отдельно.
 

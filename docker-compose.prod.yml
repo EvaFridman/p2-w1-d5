@@ -2,6 +2,7 @@
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 # Ready images by commit-hash tag, restart on failure, no source mounts, and only the web port
 # is published. The same images run on staging and production; only the env file differs.
+# IMAGE_REGISTRY (e.g. ghcr.io/evafridman/, with the trailing slash) pulls the images CI published.
 
 x-restart: &restart
   restart: unless-stopped
@@ -22,7 +23,7 @@ services:
   api:
     <<: *restart
     build: !reset null
-    image: realty-api:${IMAGE_TAG:?set IMAGE_TAG to the commit hash of the images}
+    image: ${IMAGE_REGISTRY:-}realty-api:${IMAGE_TAG:?set IMAGE_TAG to the commit hash of the images}
     command: !reset null
     environment:
       NODE_ENV: production
@@ -35,7 +36,7 @@ services:
   worker:
     <<: *restart
     build: !reset null
-    image: realty-api:${IMAGE_TAG:?set IMAGE_TAG to the commit hash of the images}
+    image: ${IMAGE_REGISTRY:-}realty-api:${IMAGE_TAG:?set IMAGE_TAG to the commit hash of the images}
     command: !override ["node", "dist/worker.js"]
     environment:
       NODE_ENV: production
@@ -45,7 +46,7 @@ services:
   web:
     <<: *restart
     build: !reset null
-    image: realty-web:${IMAGE_TAG:?set IMAGE_TAG to the commit hash of the images}
+    image: ${IMAGE_REGISTRY:-}realty-web:${IMAGE_TAG:?set IMAGE_TAG to the commit hash of the images}
     command: !reset null
     environment:
       NODE_ENV: production

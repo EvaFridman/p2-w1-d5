@@ -94,7 +94,10 @@ Being built in p3-w4-d4; files below may not exist yet. Check before referring t
 
 ## Before calling work done (from root)
 
-CI (`.github/workflows/ci.yml`, on PRs to `main`) runs the same list except Prettier and the web build.
+CI (`.github/workflows/ci.yml`, on PRs to `main` and pushes to `main`) runs the same list except
+Prettier and the web build. Its `images` job runs `scripts/ci-build-images.sh` (builds both production
+images, smoke-tests the prod overlay) and, on pushes to `main` only, publishes them to
+`ghcr.io/evafridman/realty-{api,web}:<7-char commit hash>`.
 
 - `npm run format:check`
 - `npm run lint:api`, `npm run lint:web`
