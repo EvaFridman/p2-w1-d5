@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino';
-import { Worker } from '@temporalio/worker';
+import { NativeConnection, Worker } from '@temporalio/worker';
 import { TemporalWorkerModule } from './temporal-worker.module.js';
 import { TaskRunnerService } from '../tasks/task-runner.service.js';
 import { createCleanupActivities } from './activities/cleanup.activity.js';
@@ -30,7 +30,12 @@ const activities = {
   ...dailyDigestActivities,
 };
 
+const connection = await NativeConnection.connect({
+  address: process.env.TEMPORAL_ADDRESS,
+});
+
 const worker = await Worker.create({
+  connection,
   workflowsPath: new URL('./workflows/index.js', import.meta.url).pathname,
   activities,
   taskQueue: TASK_QUEUE,
