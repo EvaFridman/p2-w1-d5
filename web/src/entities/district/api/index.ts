@@ -8,8 +8,12 @@ export const districtApi = {
     return apiFetch<PublicDistrictType[]>("/public/districts", { query });
   },
 
-  getDistrictBySlug(slug: string) {
-    return apiFetch<PublicDistrictType>(`/public/districts/${slug}`);
+  async getCachedDistrictBySlug(slug: string) {
+    "use cache";
+    cacheLife("hours");
+    cacheTag("districts");
+
+    return apiFetch<PublicDistrictType>(`/public/districts/${slug}`, { skipAuth: true });
   },
 
   async getCachedDistricts() {
