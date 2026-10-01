@@ -6,12 +6,12 @@ The site is in Russian: UI text and user-facing error messages are written in Ru
 
 ## Stack
 
-- Node 24 (same as CI)
+- Node 24 (same as CI and the `node:24.x` base image in the Dockerfiles; bump them together)
 - api: NestJS 12, Prisma 7 (`@prisma/adapter-pg`), PostgreSQL 18, Redis 8 (ioredis),
   RabbitMQ 4 (amqplib), Temporal (SDK 1.x), pino via `nestjs-pino`
 - web: Next 16, React 19, TanStack Query 5, Zustand 5
-- Local services run natively, no Docker: Postgres via Postgres.app,
-  Redis / RabbitMQ / Temporal via Homebrew.
+- Moving to Docker (see "Docker" below). Until `docker-compose.yml` lands, services run natively:
+  Postgres via Postgres.app, Redis / RabbitMQ / Temporal via Homebrew. Temporal stays native after.
 
 ## Structure
 
@@ -48,6 +48,31 @@ The site is in Russian: UI text and user-facing error messages are written in Ru
 - Queue worker (RabbitMQ): `npm run start:worker` (in `api/`)
 - Temporal worker: `npm run start:temporal-worker` (in `api/`)
 - Web: `npm run dev` (in `web/`)
+- In Docker the queue worker is the `worker` service: the `api` image with `["node", "dist/worker.js"]`.
+
+## Docker
+
+Being built in p3-w4-d4; files below may not exist yet. Check before referring to them.
+
+- Images: `api/Dockerfile`, `web/Dockerfile`, multi-stage. Exact base-image versions, never `latest`;
+  non-root user; exec-form `CMD` (`["node", "dist/main.js"]`, keep the `.js`); copy
+  `package.json` + lockfile and install before copying sources, to keep the cache.
+- The `api` runtime stage also needs `prisma/`, `fonts/` (PDF font), `public/` (`/static`) and
+  `src/generated/` next to `dist`. Leaving one out breaks things only at runtime.
+- `web` builds with `output: "standalone"`. `NEXT_PUBLIC_*` are baked in at build time (one image per
+  environment); server-side vars (`API_URL`, secrets, Redis) are passed at run time.
+- `docker-compose.yml` (root, dev): `postgres`, `redis`, `rabbitmq`, `api`, `worker`, `web`.
+  Prod overlay: `docker compose -f docker-compose.yml -f <prod file> up`. Prod images are tagged with
+  the commit hash.
+- Containers reach each other by service name (`postgres`, `redis`, `rabbitmq`, `api`, `web`), never
+  `localhost`. Addresses come from env vars, not code.
+- In prod only `web` publishes a port; DB, Redis, broker UI and `api` are internal.
+- Startup order uses `healthcheck` + `depends_on: condition: service_healthy`, never sleeps in code.
+  `api` checks `/health/live`; `worker` has no healthcheck.
+- Named volumes: Postgres data, Redis data, `uploads` (mounted into both `api` and `worker`).
+- Secrets come from untracked env files at run time; never `COPY`/`ARG`/`ENV` them into an image.
+  Keep `api/.env.example` and `web/.env.example` complete when adding variables.
+- Temporal server and `start:temporal-worker` are not in compose; address from `TEMPORAL_ADDRESS`.
 
 ## Before calling work done (from root)
 
@@ -68,12 +93,19 @@ CI (`.github/workflows/ci.yml`, on PRs to `main`) runs the same list except Pret
 
 - New migration (in `api/`): `npx prisma migrate dev --name <name>`.
 - There is one local DB and it holds data; schema changes go through a migration.
+- In Docker, migrations run in a one-off container from the `api` image (`prisma migrate deploy`),
+  not inside the running app.
+- `docker compose down -v` and `docker volume rm/prune` delete the DB and uploads; the Bash guard
+  blocks them. Only the owner runs them, by hand.
 
 ## Git
 
 - Commits: `type(scope): subject`. Types: feat, fix, refactor, chore, docs, test, ci.
   Scope required, one of: api, web, docs, deps. Subject lower-case.
-- Pre-commit hook runs Prettier on staged files (lint-staged) and commitlint on the message.
+- Pre-commit hook runs Prettier on staged files (lint-staged), then gitleaks on the staged diff;
+  commitlint checks the message. CI also runs gitleaks over the full history.
+- A gitleaks hit is a real secret until proven otherwise: unstage it, never weaken the scan. Only a
+  value confirmed to be a placeholder goes into the `.gitleaks.toml` allowlist, with a description.
 - Branches: `pX-wY-dZ/release-N/<short-desc>`; changes go through pull requests.
 
 @CONTRIBUTING.md

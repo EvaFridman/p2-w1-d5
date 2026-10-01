@@ -24,6 +24,10 @@ Check:
 3. Tests. New or changed service/guard logic has a spec with a success and a refusal case.
 4. Conventions. `.js` in relative api imports; responses rely on the `{ data, error, meta }`
    interceptor; user-facing text in Russian; `api/src/generated` and legacy folders untouched.
+5. Docker (Dockerfiles, compose files, `.dockerignore`): the rules in the "Docker" section of
+   `CLAUDE.md`. Above all, flag: secrets in `COPY`/`ARG`/`ENV`, running as root, `latest` or
+   floating image tags, shell-form `CMD`, `localhost` instead of a service name, ports published
+   beyond `web` in prod.
 
 Also report real bugs you notice.
 
