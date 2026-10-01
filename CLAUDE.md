@@ -51,13 +51,14 @@ The site is in Russian: UI text and user-facing error messages are written in Ru
 
 ## Before calling work done (from root)
 
-CI (`.github/workflows/ci.yml`, on PRs to `main`) runs the same list except Prettier.
+CI (`.github/workflows/ci.yml`, on PRs to `main`) runs the same list except Prettier and the web build.
 
 - `npm run format:check`
 - `npm run lint:api`, `npm run lint:web`
 - `npm --prefix web run lint:css`
 - `npm run typecheck`
 - `npm run test:api` (it sets the ESM flag Jest needs)
+- After `web` changes: `npm --prefix web run build` with the API running (dev mode skips prerendering)
 
 ## Dependencies
 
