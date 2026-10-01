@@ -171,7 +171,7 @@ docker compose run --rm api npx prisma db seed
 
 ### Temporal
 
-Сервер Temporal и его воркер (`start:temporal-worker`) в compose не входят и запускаются отдельно, на машине:
+Сервер Temporal и его воркер (`start:temporal-worker`) в compose для разработки не входят и запускаются отдельно, на машине (на продакшен-сервере они — сервисы `deploy/docker-compose.server.yml`, см. `deploy/README.md`):
 
 ```bash
 temporal server start-dev --db-filename ~/.temporal/realty.db

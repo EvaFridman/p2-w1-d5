@@ -7,6 +7,8 @@
 #   IMAGE_REGISTRY  default: empty (local names); in CI ghcr.io/<owner>/
 #   SITE_URL        public site address baked into the web image; default from .env
 #   IMAGE_SOURCE    optional repository URL, added as the org.opencontainers.image.source label
+#   NEXT_PUBLIC_SENTRY_DSN, NEXT_PUBLIC_SENTRY_ENVIRONMENT
+#                   optional, browser-side Sentry baked into the web image; empty turns it off
 #
 # Uses the compose project "realty-ci" with its own volumes, so a local run never touches the
 # working stack's data. The web build prerenders from an api published on host port 3000.
@@ -67,6 +69,8 @@ docker build "${LABEL_ARGS[@]}" -t "$WEB_IMAGE" \
   --build-arg API_URL=http://localhost:3000 \
   --build-arg NEXT_PUBLIC_SITE_URL="$SITE_URL" \
   --build-arg NEXT_PUBLIC_API_BASE_URL="$SITE_URL" \
+  --build-arg NEXT_PUBLIC_SENTRY_DSN="${NEXT_PUBLIC_SENTRY_DSN:-}" \
+  --build-arg NEXT_PUBLIC_SENTRY_ENVIRONMENT="${NEXT_PUBLIC_SENTRY_ENVIRONMENT:-}" \
   --secret id=next_build_secret,env=NEXT_BUILD_SECRET \
   web
 docker rm -f "$BUILD_API" >/dev/null

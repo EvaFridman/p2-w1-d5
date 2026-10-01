@@ -85,6 +85,10 @@ jobs:
       - name: Build images and smoke-test the production overlay
         env:
           SITE_URL: ${{ vars.SITE_URL }}
+          # Browser-side Sentry; the DSN is public anyway (it ships in the bundle).
+          # Published images are the production ones, hence the fixed environment name.
+          NEXT_PUBLIC_SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_SENTRY_ENVIRONMENT: production
           IMAGE_SOURCE: ${{ github.server_url }}/${{ github.repository }}
         run: ./scripts/ci-build-images.sh
 

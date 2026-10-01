@@ -24,6 +24,7 @@ FROM deps AS build
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_SENTRY_DSN
+ARG NEXT_PUBLIC_SENTRY_ENVIRONMENT
 # Used only while prerendering; the running container gets its own API_URL.
 ARG API_URL
 

@@ -1,0 +1,12 @@
+# HTTPS in front of web. Caddy gets and renews the Let's Encrypt certificate by itself;
+# ports 80 and 443 must be open and the domain must point at the server.
+# SITE_DOMAIN comes from the server's .env (deploy/docker-compose.server.yml).
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3001
+}
+
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
