@@ -1,0 +1,67 @@
+- name: Install packages (Docker and Compose from Ubuntu, firewall)
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose-v2
+      - ufw
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Configure the Docker daemon (log rotation, optional registry mirror)
+  ansible.builtin.template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: "0644"
+  notify: Restart Docker
+
+- name: Start Docker on boot
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started
+
+# Rules go in before ufw is enabled, so the SSH session survives.
+# Docker publishes ports past ufw: only Caddy may publish any (see deploy/README.md).
+- name: Allow SSH, HTTP and HTTPS
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop:
+    - { port: "22", proto: tcp }
+    - { port: "80", proto: tcp }
+    - { port: "443", proto: tcp }
+    # HTTP/3 in Caddy.
+    - { port: "443", proto: udp }
+
+- name: Enable the firewall, deny other incoming traffic
+  community.general.ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
+
+- name: Check for a swap file
+  ansible.builtin.stat:
+    path: /swapfile
+  register: swapfile
+
+- name: Create the swap file
+  when: not swapfile.stat.exists
+  block:
+    - name: Allocate /swapfile
+      ansible.builtin.command: fallocate -l {{ swap_size_mb }}M /swapfile
+      changed_when: true
+
+    - name: Restrict /swapfile to root
+      ansible.builtin.file:
+        path: /swapfile
+        mode: "0600"
+
+    - name: Format and enable swap
+      ansible.builtin.shell: mkswap /swapfile && swapon /swapfile
+      changed_when: true
+
+- name: Enable swap on boot
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    line: /swapfile none swap sw 0 0

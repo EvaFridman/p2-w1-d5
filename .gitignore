@@ -143,5 +143,12 @@ vite.config.ts.timestamp-*
 .vite/
 .DS_Store
 
+# Ansible Vault with production secrets: the repository is public, the file stays local
+deploy/ansible/group_vars/*/vault.yml
+
+# Database and uploads copies (README, "Обслуживание"): real user data
+backup-*.sql
+uploads-*.tar
+
 # Claude Code personal overrides (shared settings live in .claude/settings.json)
 .claude/settings.local.json
