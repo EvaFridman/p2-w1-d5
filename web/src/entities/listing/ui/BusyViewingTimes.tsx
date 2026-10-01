@@ -1,4 +1,5 @@
 import { listingApi } from "@/entities/listing/api";
+import { APP_TIME_ZONE } from "@/shared/lib/format";
 
 import styles from "./BusyViewingTimes.module.css";
 
@@ -18,6 +19,7 @@ export async function BusyViewingTimes({ listingId }: Props) {
           {times.map((time) => (
             <li key={time}>
               {new Date(time).toLocaleString("ru-RU", {
+                timeZone: APP_TIME_ZONE,
                 day: "numeric",
                 month: "long",
                 hour: "2-digit",

@@ -6,6 +6,7 @@ import { viewingRequestSchema } from "@/entities/viewing/model/schema";
 import { getSession } from "@/shared/session";
 import { apiFetch } from "@/shared/api/api-fetch";
 import { ApiError } from "@/shared/api/errors";
+import { APP_UTC_OFFSET } from "@/shared/lib/format";
 
 type ViewingRequestActionState = {
   fieldErrors?: Record<string, string[]>;
@@ -55,7 +56,7 @@ export async function createViewingRequest(
         clientName: name,
         clientPhone: phone,
         clientEmail: email,
-        preferredAt: `${date}T${time}:00`,
+        preferredAt: `${date}T${time}:00${APP_UTC_OFFSET}`,
         comment: comment || undefined,
       },
     });

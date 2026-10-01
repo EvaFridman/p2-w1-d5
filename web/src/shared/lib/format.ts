@@ -1,3 +1,9 @@
+// Dates are shown and entered in Moscow time on both server and browser: without an explicit
+// zone the server (UTC in Docker) and the browser format differently and hydration fails.
+export const APP_TIME_ZONE = "Europe/Moscow";
+// Moscow has no daylight saving time, so the offset is constant.
+export const APP_UTC_OFFSET = "+03:00";
+
 export function formatPrice(price: number | string, isRent = false): string {
   const value = Number(price);
   if (!Number.isFinite(value)) return "—";
@@ -33,6 +39,7 @@ export function formatDate(date: string | Date, withYear = true): string {
   if (Number.isNaN(value.getTime())) return "—";
 
   return value.toLocaleDateString("ru-RU", {
+    timeZone: APP_TIME_ZONE,
     day: "numeric",
     month: "long",
     ...(withYear ? { year: "numeric" } : {}),
