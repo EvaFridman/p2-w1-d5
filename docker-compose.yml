@@ -43,9 +43,22 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:8.10.2-trixie
+    healthcheck:
+      # redis-cli exits 0 even on an error reply (e.g. LOADING), so check for PONG.
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   rabbitmq:
     # The management plugin is included, but its UI port is published only in the dev setup.
@@ -53,26 +66,44 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   api:
     build: ./api
     image: realty-api:${IMAGE_TAG:-dev}
     environment: *api-env
-    depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+    healthcheck:
+      # /health/live does not touch dependencies: an unavailable database is not a dead process.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health/live').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    depends_on: &infra-healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   worker:
     # Same image as api, different entry point: consumes RabbitMQ and sends mail.
+    # No HTTP port, so no healthcheck; nothing depends on it.
     build: ./api
     image: realty-api:${IMAGE_TAG:-dev}
     command: ["node", "dist/worker.js"]
     environment: *api-env
-    depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+    depends_on: *infra-healthy
 
   web:
     build:
@@ -94,8 +125,19 @@ services:
       NEXT_BUILD_SECRET: ${NEXT_BUILD_SECRET}
     ports:
       - "3001:3001"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 secrets:
   next_build_secret:
