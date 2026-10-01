@@ -16,6 +16,14 @@ COPY nest-cli.json tsconfig.json tsconfig.build.json ./
 COPY src ./src
 RUN npm run build
 
+# Dev: watch mode with mounted sources (docker-compose.yml). `nest start --watch` finds the
+# old app process with `ps` before restarting it; slim images have no ps, so the old process
+# keeps the port and every restart fails with EADDRINUSE.
+FROM build AS dev
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends procps \
+    && rm -rf /var/lib/apt/lists/*
+
 # Production dependencies only, with install scripts: @prisma/engines downloads the
 # schema engine that `prisma migrate deploy` needs. The root postinstall runs
 # `prisma generate`, hence the schema; the runtime takes the client from the build stage.

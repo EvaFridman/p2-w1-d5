@@ -11,9 +11,18 @@ const logger = pino({
 
 const TASK_QUEUE = 'scheduled-tasks';
 
-const connection = await Connection.connect({
-  address: 'localhost:7233',
-});
+const address = process.env.TEMPORAL_ADDRESS;
+
+let connection: Connection;
+try {
+  connection = await Connection.connect({ address });
+} catch (error) {
+  logger.error(
+    { err: error, address: address ?? 'SDK default' },
+    'Cannot connect to Temporal: workflows were not started',
+  );
+  process.exit(1);
+}
 
 const client = new Client({ connection });
 
