@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateViewingDto } from './dto/create-viewing.dto.js';
 import { ListViewingsDto } from './dto/list-viewings.dto.js';
 import { RecentViewingsDto } from './dto/recent-viewings.dto.js';
-import { UpdateStatusDto } from './dto/update-status.dto.js';
+import { UpdateViewingStatusDto } from './dto/update-viewing-status.dto.js';
 import {
   canTransition,
   getAllowedTransitions,
@@ -173,7 +173,7 @@ export class ViewingsService {
 
   async updateStatus(
     id: number,
-    dto: UpdateStatusDto,
+    dto: UpdateViewingStatusDto,
     user: { id: number; role: string },
   ) {
     try {

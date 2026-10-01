@@ -16,7 +16,7 @@ import { ListViewingsDto } from './dto/list-viewings.dto.js';
 import { RecentViewingsDto } from './dto/recent-viewings.dto.js';
 import { AgentSelfGuard } from './guards/agent-self.guard.js';
 import { CreateViewingDto } from './dto/create-viewing.dto.js';
-import { UpdateStatusDto } from './dto/update-status.dto.js';
+import { UpdateViewingStatusDto } from './dto/update-viewing-status.dto.js';
 import { Public } from '../auth/decorators/public.decorator.js';
 import type { Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
@@ -130,7 +130,7 @@ export class ViewingsController {
   @Patch('viewings/:id/status')
   async updateStatus(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateStatusDto,
+    @Body() dto: UpdateViewingStatusDto,
     @Req() request: Request,
   ) {
     if (!request.user) throw new UnauthorizedError('User context is missing');
