@@ -4,6 +4,7 @@ node_modules
 package-lock.json
 api/src/generated
 api/.claude
+api/.agents
 server
 server_v2.0
 admin-client

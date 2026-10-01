@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 
 import { getSavedSearchByToken } from "@/entities/saved-search/api";
+import { Loader } from "@/shared/ui";
 import { OutdatedSearch } from "@/_pages/saved-searches/OutdatedSearch";
 
 export const metadata: Metadata = {
@@ -13,7 +15,7 @@ type Props = {
   params: Promise<{ token: string }>;
 };
 
-export default async function SavedSearchLinkPage({ params }: Props) {
+async function SavedSearchLinkContent({ params }: Props) {
   const { token } = await params;
   const search = await getSavedSearchByToken(token);
 
@@ -21,4 +23,12 @@ export default async function SavedSearchLinkPage({ params }: Props) {
   if (!search.isOutdated) redirect(`/listings?${search.query}`);
 
   return <OutdatedSearch />;
+}
+
+export default function SavedSearchLinkPage({ params }: Props) {
+  return (
+    <Suspense fallback={<Loader />}>
+      <SavedSearchLinkContent params={params} />
+    </Suspense>
+  );
 }
