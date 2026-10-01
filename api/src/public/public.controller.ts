@@ -145,6 +145,22 @@ export class PublicController {
     return await this.publicService.findAllFavorites(request.user);
   }
 
+  @ApiOperation({
+    summary:
+      'Получить опубликованные объявления из избранного текущего пользователя',
+  })
+  @ApiBearerAuth('bearer')
+  @ApiResponse({
+    status: 200,
+    description: 'Объявления из избранного успешно получены',
+  })
+  @ApiResponse({ status: 401, description: 'Токен отсутствует или невалиден' })
+  @Get('favorites/listings')
+  async findFavoriteListings(@Req() request: Request) {
+    if (!request.user) throw new UnauthorizedError('User context is missing');
+    return await this.publicService.findFavoriteListings(request.user);
+  }
+
   @ApiOperation({ summary: 'Добавить объявление в избранное' })
   @ApiResponse({
     status: 201,

@@ -22,6 +22,33 @@ import { generateCatalogCacheKey } from '../redis/catalog-key.helper.js';
 import { generateDistrictsCacheKey } from '../redis/districts-key.helper.js';
 import { PublisherService } from '../queue/publisher.service.js';
 
+const publicListingSelect = {
+  title: true,
+  description: true,
+  agent: { select: { id: true, name: true, avatarFileName: true } },
+  id: true,
+  price: true,
+  area: true,
+  rooms: true,
+  floor: true,
+  totalFloors: true,
+  dealType: true,
+  propertyType: true,
+  address: true,
+  publishedAt: true,
+  district: { select: { id: true, title: true, city: true } },
+  photos: {
+    select: {
+      id: true,
+      fileName: true,
+      externalUrl: true,
+      position: true,
+      isCover: true,
+    },
+    orderBy: { position: 'asc' },
+  },
+} satisfies Prisma.ListingsSelect;
+
 @Injectable()
 export class PublicService {
   constructor(
@@ -178,33 +205,7 @@ export class PublicService {
   async findOneListing(id: number) {
     const listing = await this.prisma.listings.findUnique({
       where: { id },
-      select: {
-        title: true,
-        description: true,
-        agent: { select: { id: true, name: true, avatarFileName: true } },
-        id: true,
-        price: true,
-        area: true,
-        rooms: true,
-        floor: true,
-        totalFloors: true,
-        dealType: true,
-        propertyType: true,
-        address: true,
-        publishedAt: true,
-        status: true,
-        district: { select: { id: true, title: true, city: true } },
-        photos: {
-          select: {
-            id: true,
-            fileName: true,
-            externalUrl: true,
-            position: true,
-            isCover: true,
-          },
-          orderBy: { position: 'asc' },
-        },
-      },
+      select: { ...publicListingSelect, status: true },
     });
 
     if (!listing || listing.status !== ListingStatus.PUBLISHED)
@@ -266,6 +267,19 @@ export class PublicService {
     });
 
     return favorites.map((favorite) => favorite.listingId);
+  }
+
+  async findFavoriteListings(user: { id: number }) {
+    const favorites = await this.prisma.favorites.findMany({
+      where: {
+        userId: user.id,
+        listing: { status: ListingStatus.PUBLISHED },
+      },
+      select: { listing: { select: publicListingSelect } },
+      orderBy: { addedAt: 'desc' },
+    });
+
+    return favorites.map((favorite) => favorite.listing);
   }
 
   async addFavorite(listingId: number, user: { id: number }) {
