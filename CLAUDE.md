@@ -102,7 +102,10 @@ CI (`.github/workflows/ci.yml`, on PRs to `main`) runs the same list except Pret
 
 - Commits: `type(scope): subject`. Types: feat, fix, refactor, chore, docs, test, ci.
   Scope required, one of: api, web, docs, deps. Subject lower-case.
-- Pre-commit hook runs Prettier on staged files (lint-staged) and commitlint on the message.
+- Pre-commit hook runs Prettier on staged files (lint-staged), then gitleaks on the staged diff;
+  commitlint checks the message. CI also runs gitleaks over the full history.
+- A gitleaks hit is a real secret until proven otherwise: unstage it, never weaken the scan. Only a
+  value confirmed to be a placeholder goes into the `.gitleaks.toml` allowlist, with a description.
 - Branches: `pX-wY-dZ/release-N/<short-desc>`; changes go through pull requests.
 
 @CONTRIBUTING.md

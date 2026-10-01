@@ -1,2 +1,8 @@
 #!/bin/sh
-npx lint-staged
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not installed (brew install gitleaks); commit aborted." >&2
+  exit 1
+fi
+
+# lint-staged first, so gitleaks scans exactly what gets committed.
+npx lint-staged && gitleaks git --pre-commit --staged --redact --no-banner --verbose
