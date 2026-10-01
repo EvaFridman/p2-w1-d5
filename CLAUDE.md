@@ -75,3 +75,5 @@ CI (`.github/workflows/ci.yml`, on PRs to `main`) runs the same list except Pret
   Scope required, one of: api, web, docs, deps. Subject lower-case.
 - Pre-commit hook runs Prettier on staged files (lint-staged) and commitlint on the message.
 - Branches: `pX-wY-dZ/release-N/<short-desc>`; changes go through pull requests.
+
+@CONTRIBUTING.md
