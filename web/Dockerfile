@@ -2,9 +2,8 @@
 
 ARG NODE_IMAGE=node:24.21.0-trixie-slim
 
-# Build: all dependencies, next build. The build prerenders pages and calls the API,
-# so it needs a running api at API_URL (see README.md, "Сборка образа").
-FROM ${NODE_IMAGE} AS build
+# Dependencies and sources. The dev setup runs `next dev` from this stage.
+FROM ${NODE_IMAGE} AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -13,6 +12,10 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+
+# Build: next build. The build prerenders pages and calls the API,
+# so it needs a running api at API_URL (see README.md, "Сборка образа").
+FROM deps AS build
 
 # NEXT_PUBLIC_* are inlined into the browser bundle at build time: one image per environment.
 ARG NEXT_PUBLIC_SITE_URL
