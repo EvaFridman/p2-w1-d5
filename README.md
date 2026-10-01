@@ -103,13 +103,14 @@ IMAGE_TAG=<тег запущенных образов> docker compose -f docker-
 
 Pull request образы только собирает и не публикует. Для входа в реестр CI использует встроенный секрет `GITHUB_TOKEN`, в файлах учётных данных нет. Адрес сайта для `NEXT_PUBLIC_*` витрины берётся из переменной репозитория `SITE_URL` (Settings → Secrets and variables → Actions → Variables), без неё — `http://localhost:3001`.
 
-Запуск опубликованных образов (пакеты приватные, нужен токен GitHub с правом `read:packages`):
+Пакеты публичные — они наследуют видимость публичного репозитория, к которому привязаны меткой `org.opencontainers.image.source`, — поэтому входить в реестр не нужно. Запуск опубликованных образов:
 
 ```bash
-echo "<токен>" | docker login ghcr.io -u <логин GitHub> --password-stdin
 export IMAGE_REGISTRY=ghcr.io/evafridman/ IMAGE_TAG=<хеш коммита в main>
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
+
+Секретов в образах нет: они передаются только при запуске. Образы собраны для `linux/amd64`; на Mac с Apple Silicon Docker Desktop запускает их через эмуляцию — работает, но медленнее.
 
 Ту же сборку и проверку можно запустить локально: `./scripts/ci-build-images.sh` (освободите порты `3000` и `3001`; скрипт работает в отдельном проекте `realty-ci` и рабочие данные не трогает).
 
