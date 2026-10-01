@@ -33,6 +33,8 @@ x-api-env: &api-env
   PAGE_SIZE_DEFAULT: ${PAGE_SIZE_DEFAULT}
   PAGE_SIZE_MAX: ${PAGE_SIZE_MAX}
   LOG_LEVEL: ${LOG_LEVEL}
+  # Used only by `prisma db seed` (see README.md).
+  SEED_PASSWORD: ${SEED_PASSWORD}
 
 services:
   postgres:
@@ -52,6 +54,9 @@ services:
 
   redis:
     image: redis:8.10.2-trixie
+    volumes:
+      # Redis writes its snapshots (dump.rdb) to /data.
+      - redisdata:/data
     healthcheck:
       # redis-cli exits 0 even on an error reply (e.g. LOADING), so check for PONG.
       test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
@@ -77,6 +82,8 @@ services:
     build: ./api
     image: realty-api:${IMAGE_TAG:-dev}
     environment: *api-env
+    volumes: &uploads # files.service.ts resolves ./uploads/{photos,avatars} from /app.
+      - uploads:/app/uploads
     healthcheck:
       # /health/live does not touch dependencies: an unavailable database is not a dead process.
       test:
@@ -103,6 +110,7 @@ services:
     image: realty-api:${IMAGE_TAG:-dev}
     command: ["node", "dist/worker.js"]
     environment: *api-env
+    volumes: *uploads
     depends_on: *infra-healthy
 
   web:
@@ -145,3 +153,5 @@ secrets:
 
 volumes:
   pgdata:
+  redisdata:
+  uploads:

@@ -104,7 +104,10 @@ CI (`.github/workflows/ci.yml`, on PRs to `main`) runs the same list except Pret
 - New migration (in `api/`): `npx prisma migrate dev --name <name>`.
 - There is one local DB and it holds data; schema changes go through a migration.
 - In Docker, migrations run in a one-off container from the `api` image (`prisma migrate deploy`),
-  not inside the running app.
+  not inside the running app. That is why `prisma` is in `dependencies`, not `devDependencies`:
+  keep it there.
+- Seeds: `api/src/seed.ts` (built to `dist/seed.js`, run by `prisma db seed`). It skips a DB that
+  already has users; users get the password from `SEED_PASSWORD`. Natively: `npm run build` first.
 - `docker compose down -v` and `docker volume rm/prune` delete the DB and uploads; the Bash guard
   blocks them. Only the owner runs them, by hand.
 
