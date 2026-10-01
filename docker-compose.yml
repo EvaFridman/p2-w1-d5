@@ -1,0 +1,105 @@
+# Full stack: database, cache, broker, api, queue worker, web.
+# Values come from .env next to this file (not in git); see .env.example.
+# Containers reach each other by service name; only web publishes a port.
+# Temporal server and its worker are not part of compose (see README.md).
+
+name: realty
+
+x-api-env: &api-env
+  NODE_ENV: production
+  PORT: 3000
+  DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  # Server-to-server address of web (revalidation).
+  WEB_URL: http://web:3001
+  # Public address of the site, used in links that reach the browser.
+  # web forwards /files/* and /static/* to api, so avatars load through port 3001.
+  PUBLIC_URL: ${SITE_URL}
+  CLIENT_URL: ${CLIENT_URL}
+  JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+  ACCESS_TTL: ${ACCESS_TTL}
+  REFRESH_TTL: ${REFRESH_TTL}
+  REVALIDATE_SECRET: ${REVALIDATE_SECRET}
+  NEXT_BUILD_SECRET: ${NEXT_BUILD_SECRET}
+  MAIL_TRANSPORT: ${MAIL_TRANSPORT}
+  MAIL_FROM: ${MAIL_FROM}
+  SMTP_HOST: ${SMTP_HOST}
+  SMTP_PORT: ${SMTP_PORT}
+  SMTP_USER: ${SMTP_USER}
+  SMTP_PASS: ${SMTP_PASS}
+  PAGE_SIZE_DEFAULT: ${PAGE_SIZE_DEFAULT}
+  PAGE_SIZE_MAX: ${PAGE_SIZE_MAX}
+  LOG_LEVEL: ${LOG_LEVEL}
+
+services:
+  postgres:
+    image: postgres:18.6-trixie
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+  redis:
+    image: redis:8.10.2-trixie
+
+  rabbitmq:
+    # The management plugin is included, but its UI port is published only in the dev setup.
+    image: rabbitmq:4.3.6-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+
+  api:
+    build: ./api
+    image: realty-api:${IMAGE_TAG:-dev}
+    environment: *api-env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+  worker:
+    # Same image as api, different entry point: consumes RabbitMQ and sends mail.
+    build: ./api
+    image: realty-api:${IMAGE_TAG:-dev}
+    command: ["node", "dist/worker.js"]
+    environment: *api-env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL}
+        NEXT_PUBLIC_API_BASE_URL: ${SITE_URL}
+        # The build prerenders pages from a running api reachable from the build;
+        # build steps cannot see the compose network (see README.md).
+        API_URL: ${BUILD_API_URL:-http://host.docker.internal:3000}
+      secrets:
+        - next_build_secret
+    image: realty-web:${IMAGE_TAG:-dev}
+    environment:
+      API_URL: http://api:3000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET}
+      NEXT_BUILD_SECRET: ${NEXT_BUILD_SECRET}
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api
+
+secrets:
+  next_build_secret:
+    environment: NEXT_BUILD_SECRET
+
+volumes:
+  pgdata:

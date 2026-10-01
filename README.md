@@ -1,3 +1,49 @@
+## Запуск в Docker
+
+Шесть сервисов из `docker-compose.yml`: `postgres`, `redis`, `rabbitmq`, `api`, `worker` (тот же образ, что `api`, разбирает очередь и отправляет письма), `web`. Наружу открыт только порт витрины `3001`. Сервер Temporal и его воркер в compose не входят и запускаются отдельно.
+
+1. Значения переменных:
+
+   ```bash
+   cp .env.example .env   # заполнить; .env в репозиторий не попадает
+   ```
+
+2. База, кеш и брокер:
+
+   ```bash
+   docker compose up -d postgres redis rabbitmq
+   ```
+
+3. Данные. Сидов пока нет, поэтому база в контейнере заполняется копией локальной (локальная база только читается):
+
+   ```bash
+   pg_dump --no-owner --no-privileges "<DATABASE_URL локальной базы>" \
+     | docker compose exec -T postgres sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+   ```
+
+4. `api` и `worker`:
+
+   ```bash
+   docker compose build api
+   docker compose up -d api worker
+   ```
+
+5. Образ витрины. Сборка заранее рендерит страницы и обращается к API, а шаги сборки не видят сеть compose. Поэтому на время сборки поднимается временный `api` с портом `3000` на машине:
+
+   ```bash
+   docker compose run -d --rm --no-deps --name realty-api-build -p 3000:3000 api
+   docker compose build web
+   docker rm -f realty-api-build
+   ```
+
+6. Всё вместе:
+
+   ```bash
+   docker compose up -d
+   ```
+
+   Витрина: <http://localhost:3001>. Журнал одного сервиса: `docker compose logs -f worker`.
+
 ## Требования к окружению
 
 ### Поиск секретов (gitleaks)

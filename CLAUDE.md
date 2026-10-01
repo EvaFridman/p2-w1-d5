@@ -10,8 +10,9 @@ The site is in Russian: UI text and user-facing error messages are written in Ru
 - api: NestJS 12, Prisma 7 (`@prisma/adapter-pg`), PostgreSQL 18, Redis 8 (ioredis),
   RabbitMQ 4 (amqplib), Temporal (SDK 1.x), pino via `nestjs-pino`
 - web: Next 16, React 19, TanStack Query 5, Zustand 5
-- Moving to Docker (see "Docker" below). Until `docker-compose.yml` lands, services run natively:
-  Postgres via Postgres.app, Redis / RabbitMQ / Temporal via Homebrew. Temporal stays native after.
+- Two ways to run: `docker-compose.yml` (see "Docker" below), or natively with Postgres via
+  Postgres.app and Redis / RabbitMQ / Temporal via Homebrew. Temporal is native in both.
+  The compose database is separate from the native one.
 
 ## Structure
 
@@ -65,7 +66,11 @@ Being built in p3-w4-d4; files below may not exist yet. Check before referring t
   `NEXT_BUILD_SECRET` via `--secret`, never `ARG`). Commands: `web/README.md`. With `cacheComponents`,
   `generateStaticParams` must not return `[]`: Next 16 fails the build.
 - `docker-compose.yml` (root, dev): `postgres`, `redis`, `rabbitmq`, `api`, `worker`, `web`.
-  Prod overlay: `docker compose -f docker-compose.yml -f <prod file> up`. Prod images are tagged with
+  Values come from root `.env` (untracked; names in root `.env.example`); service addresses are
+  written in the compose file. Startup order and the web build step: root `README.md`.
+- Build steps cannot reach the compose network, so `docker compose build web` needs an api on
+  host port 3000 (a one-off `docker compose run -p 3000:3000 api`, see README).
+- Prod overlay: `docker compose -f docker-compose.yml -f <prod file> up`. Prod images are tagged with
   the commit hash.
 - Containers reach each other by service name (`postgres`, `redis`, `rabbitmq`, `api`, `web`), never
   `localhost`. Addresses come from env vars, not code.
