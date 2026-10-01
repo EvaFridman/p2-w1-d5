@@ -17,7 +17,7 @@ export type UserMailPayload = {
   email: string;
   name: string;
   [key: string]: unknown;
-}
+};
 
 export type ListingMailPayload = {
   id: number;
@@ -28,22 +28,22 @@ export type ListingMailPayload = {
   description?: string | null;
   agent?: UserMailPayload;
   [key: string]: unknown;
-}
+};
 
 export type ViewingMailPayload = {
   clientName: string;
   clientPhone: string;
   clientEmail: string;
-  preferredAt: string  | Date;
+  preferredAt: string | Date;
   listing?: ListingMailPayload;
   [key: string]: unknown;
-}
+};
 
 export type DigestStatusChange = {
   listing: { id: number; title: string };
   fromStatus: string;
   toStatus: string;
-}
+};
 
 @Injectable()
 export class MailService {
@@ -135,7 +135,10 @@ export class MailService {
     }
   }
 
-  async sendNewViewingNotice(listing: ListingMailPayload, viewing: ViewingMailPayload): Promise<unknown> {
+  async sendNewViewingNotice(
+    listing: ListingMailPayload,
+    viewing: ViewingMailPayload,
+  ): Promise<unknown> {
     if (!listing.agent)
       throw new ExternalServiceError('Listing agent is not loaded');
     const pdfBuffer = await this.renderListingCardBuffer(listing);
@@ -164,7 +167,10 @@ export class MailService {
     });
   }
 
-  async sendViewingConfirmation(listing: ListingMailPayload, viewing: ViewingMailPayload): Promise<unknown> {
+  async sendViewingConfirmation(
+    listing: ListingMailPayload,
+    viewing: ViewingMailPayload,
+  ): Promise<unknown> {
     return this.sendMailSafely({
       to: viewing.clientEmail,
       subject: 'Просмотр подтверждён',

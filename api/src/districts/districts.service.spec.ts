@@ -37,8 +37,10 @@ describe('DistrictsService', () => {
       slug: 'severnyy-rayon-1',
       city: 'Казань',
     };
-    
-    const mockFindUnique = prisma.districts.findUnique as unknown as ReturnType<typeof jest.fn>;
+
+    const mockFindUnique = prisma.districts.findUnique as unknown as ReturnType<
+      typeof jest.fn
+    >;
     mockFindUnique.mockResolvedValue(mockDistrict);
 
     const result = await service.findOne(1);
@@ -46,14 +48,18 @@ describe('DistrictsService', () => {
   });
 
   it('should throw NotFoundError if district not found', async () => {
-    const mockFindUnique = prisma.districts.findUnique as unknown as ReturnType<typeof jest.fn>;
+    const mockFindUnique = prisma.districts.findUnique as unknown as ReturnType<
+      typeof jest.fn
+    >;
     mockFindUnique.mockResolvedValue(null);
 
     await expect(service.findOne(1)).rejects.toThrow(NotFoundError);
   });
 
   it('should return correct count of districts', async () => {
-    const mockCount = prisma.districts.count as unknown as ReturnType<typeof jest.fn>;
+    const mockCount = prisma.districts.count as unknown as ReturnType<
+      typeof jest.fn
+    >;
     mockCount.mockResolvedValue(7);
 
     const result = await service.count();

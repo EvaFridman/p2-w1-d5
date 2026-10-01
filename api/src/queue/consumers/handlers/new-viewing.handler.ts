@@ -1,7 +1,10 @@
 import type { PrismaService } from '../../../prisma/prisma.service.js';
 import type { MailService } from '../../../mail/mail.service.js';
 import type { MailPayload } from '../mail.consumer.js';
-import type { ListingMailPayload, ViewingMailPayload } from '../../../mail/mail.service.js';
+import type {
+  ListingMailPayload,
+  ViewingMailPayload,
+} from '../../../mail/mail.service.js';
 
 export async function handleNewViewing(
   payload: MailPayload,

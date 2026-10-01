@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PinoLogger } from 'nestjs-pino';
-import type { StringValue } from 'ms'; 
+import type { StringValue } from 'ms';
 import { UsersService } from '../users/users.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UnauthorizedError, ConflictError } from '../errors/app.exception.js';
@@ -56,7 +56,8 @@ export class AuthService {
     const accessExpires = this.configService.get<string>('ACCESS_TTL') ?? '15m';
 
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
-    const refreshExpires = this.configService.get<string>('REFRESH_TTL') ?? '7d';
+    const refreshExpires =
+      this.configService.get<string>('REFRESH_TTL') ?? '7d';
 
     const accessToken = await this.jwtService.signAsync(
       { sub: user.id, role: user.role },

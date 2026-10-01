@@ -17,7 +17,12 @@ import {
   ConflictError,
   ForbiddenError,
 } from '../errors/app.exception.js';
-import { UserRole, ListingStatus, Prisma, Listings } from '../generated/prisma/index.js';
+import {
+  UserRole,
+  ListingStatus,
+  Prisma,
+  Listings,
+} from '../generated/prisma/index.js';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ListingPublishedEvent } from './events/listing-published.event.js';
 import path from 'path';
@@ -35,7 +40,7 @@ export class ListingsService {
     private readonly pdfService: PdfService,
     private readonly publisherService: PublisherService,
     private readonly logger: PinoLogger,
-  ) { }
+  ) {}
 
   private handlePrismaError(error: unknown): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -330,7 +335,7 @@ export class ListingsService {
   async uploadPhotos(
     listingId: number,
     files: Express.Multer.File[],
-  ): Promise<unknown>  {
+  ): Promise<unknown> {
     if (!files || files.length === 0) return [];
 
     const cleanUploadedFiles = () => {
@@ -446,7 +451,8 @@ export class ListingsService {
         agent: { select: { id: true, name: true, email: true } },
       },
     });
-    if (!listingsList.length) throw new NotFoundError('No listings found for given ids');
+    if (!listingsList.length)
+      throw new NotFoundError('No listings found for given ids');
     const pdfStream = new PassThrough();
     this.pdfService.streamListingsBundle(
       pdfStream,

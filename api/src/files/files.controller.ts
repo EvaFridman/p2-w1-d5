@@ -83,7 +83,8 @@ export class FilesController {
         const fullUser = await this.prisma.users.findUnique({
           where: { id: Number(payload.sub) },
         });
-        if (!fullUser) throw new UnauthorizedError('User from token not found in database');
+        if (!fullUser)
+          throw new UnauthorizedError('User from token not found in database');
         const { passwordHash: _passwordHash, ...publicUser } = fullUser;
         res.req.user = publicUser;
       } catch {

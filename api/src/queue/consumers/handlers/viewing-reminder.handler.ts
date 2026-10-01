@@ -27,7 +27,9 @@ export async function handleViewingReminder(
     return 'skipped';
   }
 
-  await mailService.sendViewingReminder(viewing as unknown as ViewingMailPayload);
+  await mailService.sendViewingReminder(
+    viewing as unknown as ViewingMailPayload,
+  );
 
   await prisma.viewings.update({
     where: { id: viewing.id },

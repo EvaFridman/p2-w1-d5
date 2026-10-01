@@ -45,14 +45,18 @@ describe('FilesService', () => {
     const oldFileTime = now - 25 * 60 * 60 * 1000;
 
     jest.spyOn(Date, 'now').mockReturnValue(now);
-    
-    const mockFindMany = prisma.listingPhotos.findMany as unknown as ReturnType<typeof jest.fn>;
+
+    const mockFindMany = prisma.listingPhotos.findMany as unknown as ReturnType<
+      typeof jest.fn
+    >;
     mockFindMany.mockResolvedValue([]);
 
     jest.spyOn(fs, 'readdir');
-    jest.mocked(fs.readdir).mockResolvedValue([
-      { name: 'orphan.jpg', isFile: () => true } as Dirent,
-    ]);
+    jest
+      .mocked(fs.readdir)
+      .mockResolvedValue([
+        { name: 'orphan.jpg', isFile: () => true } as Dirent,
+      ]);
 
     jest.spyOn(fs, 'stat');
     jest.mocked(fs.stat).mockResolvedValue({ mtimeMs: oldFileTime } as Stats);
@@ -74,15 +78,17 @@ describe('FilesService', () => {
 
     jest.spyOn(Date, 'now').mockReturnValue(now);
 
-    const mockFindMany = prisma.listingPhotos.findMany as unknown as ReturnType<typeof jest.fn>;
-    mockFindMany.mockResolvedValue([
-      { fileName: 'attached.jpg' },
-    ]);
+    const mockFindMany = prisma.listingPhotos.findMany as unknown as ReturnType<
+      typeof jest.fn
+    >;
+    mockFindMany.mockResolvedValue([{ fileName: 'attached.jpg' }]);
 
     jest.spyOn(fs, 'readdir');
-    jest.mocked(fs.readdir).mockResolvedValue([
-      { name: 'attached.jpg', isFile: () => true } as Dirent,
-    ]);
+    jest
+      .mocked(fs.readdir)
+      .mockResolvedValue([
+        { name: 'attached.jpg', isFile: () => true } as Dirent,
+      ]);
 
     jest.spyOn(fs, 'stat');
     jest.mocked(fs.stat).mockResolvedValue({ mtimeMs: oldFileTime } as Stats);
@@ -102,13 +108,17 @@ describe('FilesService', () => {
 
     jest.spyOn(Date, 'now').mockReturnValue(now);
 
-    const mockFindMany = prisma.listingPhotos.findMany as unknown as ReturnType<typeof jest.fn>;
+    const mockFindMany = prisma.listingPhotos.findMany as unknown as ReturnType<
+      typeof jest.fn
+    >;
     mockFindMany.mockResolvedValue([]);
 
     jest.spyOn(fs, 'readdir');
-    jest.mocked(fs.readdir).mockResolvedValue([
-      { name: 'new-orphan.jpg', isFile: () => true } as Dirent,
-    ]);
+    jest
+      .mocked(fs.readdir)
+      .mockResolvedValue([
+        { name: 'new-orphan.jpg', isFile: () => true } as Dirent,
+      ]);
 
     jest.spyOn(fs, 'stat');
     jest.mocked(fs.stat).mockResolvedValue({ mtimeMs: newFileTime } as Stats);
