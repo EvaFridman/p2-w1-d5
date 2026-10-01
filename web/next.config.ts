@@ -8,8 +8,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "loremflickr.com",
-        pathname: "/800/600/**",
+        hostname: "picsum.photos",
+        pathname: "/seed/**",
       },
     ],
     qualities: [50, 75, 90],

@@ -97,7 +97,11 @@ export class AuthService {
     const { email, name, password, phone } = registerDto;
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser)
-      throw new ConflictError('User with such an email already exists');
+      throw new ConflictError(
+        'User with such an email already exists',
+        null,
+        'USER_EMAIL_TAKEN',
+      );
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
