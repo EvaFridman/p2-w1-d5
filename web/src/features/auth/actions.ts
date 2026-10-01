@@ -111,6 +111,8 @@ export async function register(data: RegisterData): Promise<{ error?: string }> 
     if (!response.ok) {
       const result = await response.json().catch(() => null);
 
+      if (response.status === 409 && result?.error?.code === "USER_PHONE_TAKEN")
+        return { error: "Пользователь с таким телефоном уже существует" };
       if (response.status === 409) return { error: "Пользователь с такой почтой уже существует" };
 
       return { error: result?.error?.message ?? "Не удалось создать аккаунт" };
