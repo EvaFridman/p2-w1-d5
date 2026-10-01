@@ -16,12 +16,14 @@ COPY nest-cli.json tsconfig.json tsconfig.build.json ./
 COPY src ./src
 RUN npm run build
 
-# Production dependencies only. Scripts are skipped: the root postinstall needs the
-# Prisma CLI (a dev dependency), and the client is already generated in the build stage.
+# Production dependencies only, with install scripts: @prisma/engines downloads the
+# schema engine that `prisma migrate deploy` needs. The root postinstall runs
+# `prisma generate`, hence the schema; the runtime takes the client from the build stage.
 FROM ${NODE_IMAGE} AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps --omit=dev --ignore-scripts
+COPY prisma/schema.prisma ./prisma/
+RUN npm ci --legacy-peer-deps --omit=dev
 
 # Runtime: only what the app needs to start. Files stay owned by root, so the app
 # user can read but not modify them; only uploads belongs to it.
@@ -32,8 +34,9 @@ WORKDIR /app
 COPY --from=prod-deps /app/node_modules ./node_modules
 # "type": "module" tells Node that dist/*.js is ESM.
 COPY package.json ./
-# Schema and migrations for `prisma migrate deploy`.
+# Schema, migrations and config for `prisma migrate deploy` and `prisma db seed`.
 COPY prisma ./prisma
+COPY prisma7.config.ts ./
 # pdf.service.ts reads fonts/DejaVuSans.ttf two levels up from dist/pdf.
 COPY fonts ./fonts
 # ServeStaticModule serves ./public at /static (default avatar).

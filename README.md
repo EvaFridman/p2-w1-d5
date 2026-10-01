@@ -14,21 +14,35 @@
    docker compose up -d postgres redis rabbitmq
    ```
 
-3. Данные. Сидов пока нет, поэтому база в контейнере заполняется копией локальной (локальная база только читается):
+3. Образ `api` (из него же запускаются `worker`, миграции и сиды):
+
+   ```bash
+   docker compose build api
+   ```
+
+4. Схема и данные — одноразовыми контейнерами из образа `api`, которые удаляются после выполнения:
+
+   ```bash
+   docker compose run --rm api npx prisma migrate deploy
+   docker compose run --rm api npx prisma db seed
+   ```
+
+   Сиды создают районы, 36 объявлений (30 опубликованных) и пользователей `moderator@realty.local`, `agent1@realty.local`, `agent2@realty.local`, `client@realty.local` с паролем из `SEED_PASSWORD`. В базе, где уже есть пользователи, сиды ничего не делают.
+
+   Вместо сидов можно перенести копию локальной базы (локальная база только читается):
 
    ```bash
    pg_dump --no-owner --no-privileges "<DATABASE_URL локальной базы>" \
      | docker compose exec -T postgres sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
    ```
 
-4. `api` и `worker`:
+5. `api` и `worker`:
 
    ```bash
-   docker compose build api
    docker compose up -d api worker
    ```
 
-5. Образ витрины. Сборка заранее рендерит страницы и обращается к API, а шаги сборки не видят сеть compose. Поэтому на время сборки поднимается временный `api` с портом `3000` на машине:
+6. Образ витрины. Сборка заранее рендерит страницы и обращается к API, а шаги сборки не видят сеть compose. Поэтому на время сборки поднимается временный `api` с портом `3000` на машине:
 
    ```bash
    docker compose run -d --rm --no-deps --name realty-api-build -p 3000:3000 api
@@ -36,15 +50,67 @@
    docker rm -f realty-api-build
    ```
 
-6. Всё вместе:
+7. Всё вместе:
 
    ```bash
    docker compose up -d
    ```
 
-   Витрина: <http://localhost:3001>. Журнал одного сервиса: `docker compose logs -f worker`.
+   Витрина: <http://localhost:3001>.
 
 Сервисы запускаются по готовности, а не по факту старта контейнера: `api` и `worker` ждут, пока `postgres`, `redis` и `rabbitmq` пройдут проверки состояния, `web` ждёт здорового `api`. Состояние проверок — в `docker compose ps`. У `api` проверка обращается к `/health/live` и не зависит от базы и Redis; доступность зависимостей показывает `/health/ready`. У `worker` нет HTTP-порта, поэтому проверки состояния у него нет.
+
+### Данные и тома
+
+Файловая система контейнера удаляется вместе с контейнером, поэтому всё, что должно пережить пересоздание, лежит в именованных томах:
+
+| Том                | Что хранит                                | Сервисы         |
+| ------------------ | ----------------------------------------- | --------------- |
+| `realty_pgdata`    | данные PostgreSQL                         | `postgres`      |
+| `realty_redisdata` | снимки Redis (`dump.rdb`)                 | `redis`         |
+| `realty_uploads`   | загруженные файлы: `photos/` и `avatars/` | `api`, `worker` |
+
+Остановка (`docker compose stop`) и удаление контейнеров (`docker compose down`) тома не трогают: объявления, фотографии и аватары сохраняются.
+
+### Обслуживание
+
+Журнал одного сервиса:
+
+```bash
+docker compose logs -f api
+```
+
+Копия базы одной командой, без захода в контейнер:
+
+```bash
+docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB"' > backup-$(date +%F).sql
+```
+
+Восстановление из копии в пустую базу:
+
+```bash
+docker compose exec -T postgres sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < backup-2026-10-01.sql
+```
+
+Миграции — одноразовым контейнером из образа `api`, а не внутри работающего приложения (`--rm` удаляет контейнер после выполнения):
+
+```bash
+docker compose run --rm api npx prisma migrate deploy
+```
+
+Сиды:
+
+```bash
+docker compose run --rm api npx prisma db seed
+```
+
+### ⚠️ Удаление данных
+
+> **Внимание: команда ниже безвозвратно удаляет базу, снимки Redis и все загруженные фотографии и аватары.** Перед ней снимите копию базы. Для обычной остановки она не нужна — используйте `docker compose stop` или `docker compose down` без флагов.
+>
+> ```bash
+> docker compose down -v
+> ```
 
 ## Требования к окружению
 
