@@ -7,7 +7,7 @@ import { UsersService } from '../users/users.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { LoginBlockService } from '../redis/login-block.service.js';
 import { PinoLogger } from 'nestjs-pino';
-import { UnauthorizedError } from '../errors/app.exception.js';
+import { ConflictError, UnauthorizedError } from '../errors/app.exception.js';
 import * as bcrypt from 'bcryptjs';
 
 describe('AuthService', () => {
@@ -92,5 +92,19 @@ describe('AuthService', () => {
     await expect(
       service.login('nonexistent@realty.local', 'Password123!'),
     ).rejects.toThrow(UnauthorizedError);
+  });
+
+  it('should throw ConflictError USER_EMAIL_TAKEN on register with a taken email', async () => {
+    await expect(
+      service.register({
+        email: 'exists@realty.local',
+        password: 'Password123!',
+        name: 'Тест',
+        phone: '+79990000000',
+      }),
+    ).rejects.toMatchObject({
+      constructor: ConflictError,
+      response: expect.objectContaining({ code: 'USER_EMAIL_TAKEN' }),
+    });
   });
 });

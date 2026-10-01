@@ -5,7 +5,12 @@ import { UpdateUserDto } from './dto/update-user.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import fs from 'fs';
 import path from 'path';
-import { NotFoundError, ValidationError } from '../errors/app.exception.js';
+import { Prisma } from '../generated/prisma/index.js';
+import {
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from '../errors/app.exception.js';
 import type { User, PublicUser } from './users.types.js';
 
 @Injectable()
@@ -27,23 +32,48 @@ export class UsersService {
     return { ...publicUser, avatarUrl } as PublicUser;
   }
 
+  private throwIfUniqueViolation(error: unknown) {
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      error.code !== 'P2002'
+    )
+      return;
+
+    if (JSON.stringify(error.meta).includes('Users_phone_key'))
+      throw new ConflictError(
+        'User with such a phone already exists',
+        null,
+        'USER_PHONE_TAKEN',
+      );
+    throw new ConflictError(
+      'User with such an email already exists',
+      null,
+      'USER_EMAIL_TAKEN',
+    );
+  }
+
   async create(
     data: CreateUserDto & { passwordHash?: string },
   ): Promise<PublicUser> {
-    const user = await this.prisma.users.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        role: data.role,
-        passwordHash: data.passwordHash ?? '',
-        avatarFileName: data.avatarFileName ?? null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
+    try {
+      const user = await this.prisma.users.create({
+        data: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          role: data.role,
+          passwordHash: data.passwordHash ?? '',
+          avatarFileName: data.avatarFileName ?? null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
 
-    return this.formatPublicUser(user);
+      return this.formatPublicUser(user);
+    } catch (error) {
+      this.throwIfUniqueViolation(error);
+      throw error;
+    }
   }
 
   async findAll(
@@ -103,8 +133,14 @@ export class UsersService {
         data: { ...data, updatedAt: new Date() },
       });
       return this.formatPublicUser(updatedUser);
-    } catch {
-      throw new NotFoundError('User not found');
+    } catch (error) {
+      this.throwIfUniqueViolation(error);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      )
+        throw new NotFoundError('User not found');
+      throw error;
     }
   }
 
