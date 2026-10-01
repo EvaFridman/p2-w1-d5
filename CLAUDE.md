@@ -6,7 +6,7 @@ The site is in Russian: UI text and user-facing error messages are written in Ru
 
 ## Stack
 
-- Node 24 (same as CI)
+- Node 24 (same as CI and the `node:24.x` base image in the Dockerfiles; bump them together)
 - api: NestJS 12, Prisma 7 (`@prisma/adapter-pg`), PostgreSQL 18, Redis 8 (ioredis),
   RabbitMQ 4 (amqplib), Temporal (SDK 1.x), pino via `nestjs-pino`
 - web: Next 16, React 19, TanStack Query 5, Zustand 5
@@ -95,7 +95,8 @@ CI (`.github/workflows/ci.yml`, on PRs to `main`) runs the same list except Pret
 - There is one local DB and it holds data; schema changes go through a migration.
 - In Docker, migrations run in a one-off container from the `api` image (`prisma migrate deploy`),
   not inside the running app.
-- `docker compose down -v` (or removing volumes) deletes the DB and uploads: ask first, every time.
+- `docker compose down -v` and `docker volume rm/prune` delete the DB and uploads; the Bash guard
+  blocks them. Only the owner runs them, by hand.
 
 ## Git
 
