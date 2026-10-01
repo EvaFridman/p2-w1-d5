@@ -10,9 +10,10 @@ The site is in Russian: UI text and user-facing error messages are written in Ru
 - api: NestJS 12, Prisma 7 (`@prisma/adapter-pg`), PostgreSQL 18, Redis 8 (ioredis),
   RabbitMQ 4 (amqplib), Temporal (SDK 1.x), pino via `nestjs-pino`
 - web: Next 16, React 19, TanStack Query 5, Zustand 5
-- Two ways to run: `docker-compose.yml` (see "Docker" below), or natively with Postgres via
-  Postgres.app and Redis / RabbitMQ / Temporal via Homebrew. Temporal is native in both.
-  The compose database is separate from the native one.
+- The app runs in Docker (`docker compose up -d`, see "Docker" below); Temporal stays native.
+  Working data lives in the volumes `realty_pgdata` and `realty_uploads`. Postgres.app on the
+  machine is a stale pre-Docker copy: never point the api at it (`DATABASE_URL` in `api/.env`) or
+  run `npm run start:dev` natively, or the data splits between two databases again.
 
 ## Structure
 
@@ -69,7 +70,12 @@ Being built in p3-w4-d4; files below may not exist yet. Check before referring t
   `web`. Sources are bind-mounted; `api`/`worker` build the `dev` stage (`nest start --watch`; it
   needs `ps`, hence `procps`), `web` builds the `deps` stage (`next dev`, no prerender). Ports are
   published on 127.0.0.1, with Postgres/Redis/AMQP/broker UI offset to 5433/6380/5673/15673.
-  Values come from root `.env` (untracked; names in root `.env.example`).
+  Values come from root `.env` (untracked; names in root `.env.example`; `scripts/init-env.sh`
+  generates it).
+- Every stage that runs the app runs as `node`, dev included. The `dev` stage must carry the same
+  runtime files as `runtime` (`prisma/`, `prisma7.config.ts`, `fonts/`, `public/`): a missing one
+  breaks migrations, mail PDFs or `/static` only in dev. After a Dockerfile change, re-run the
+  fresh-clone steps from README, not just `up`.
 - `docker-compose.prod.yml` overlays it: images `realty-{api,web}:${IMAGE_TAG}` (commit hash, required),
   no builds or bind mounts, `restart: unless-stopped`, only `web` publishes a port. Prod images are
   built with plain `docker build`; the `web` build needs an api on host port 3000. Commands: README.
@@ -103,8 +109,10 @@ CI (`.github/workflows/ci.yml`, on PRs to `main`) runs the same list except Pret
 
 ## Database
 
-- New migration (in `api/`): `npx prisma migrate dev --name <name>`.
-- There is one local DB and it holds data; schema changes go through a migration.
+- The working DB is the Docker one (`realty_pgdata`) and it holds real data; schema changes go
+  through a migration. New migration: `docker compose run --rm api npx prisma migrate dev --name <name>`
+  (the dev image mounts `api/prisma`, so the migration file lands in the repo). If Prisma reports
+  drift or offers a reset, stop and ask the owner.
 - In Docker, migrations run in a one-off container from the `api` image (`prisma migrate deploy`),
   not inside the running app. That is why `prisma` is in `dependencies`, not `devDependencies`:
   keep it there.
