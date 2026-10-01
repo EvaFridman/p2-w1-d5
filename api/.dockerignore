@@ -1,0 +1,35 @@
+# Dependencies and build output: rebuilt inside the image for Linux
+node_modules
+dist
+*.tsbuildinfo
+src/generated
+
+# Data: lives in a volume, not in the image
+uploads
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# VCS, agent and editor config
+.git
+.gitignore
+.claude
+.agents
+.windsurf
+.vscode
+.idea
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Not needed to build or run
+test
+coverage
+README.md
+Dockerfile
+.dockerignore
