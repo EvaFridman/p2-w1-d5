@@ -1,3 +1,58 @@
+# Docker-образ витрины
+
+## Сборка образа
+
+Выбран путь **сборки при запущенном `api`**. При сборке Next.js заранее рендерит страницы и обращается к API: `generateStaticParams` в `/listings/[id]`, кешируемые (`"use cache"`) данные главной, каталога и районов, `sitemap.xml`. Так карточки объявлений собираются заранее, а код приложения не меняется.
+
+Путь «пустой список при недоступном API» не подходит: с `cacheComponents: true` Next 16 завершает сборку ошибкой, если `generateStaticParams` вернул пустой массив (`empty-generate-static-params`).
+
+Порядок:
+
+1. Запустить `api` на порту `3000` (`npm run start:dev` в `api/` или контейнер из `api/Dockerfile`).
+2. Положить значение `NEXT_BUILD_SECRET` в файл вне репозитория, например `/tmp/next_build_secret`.
+3. Из корня репозитория:
+
+```bash
+docker build -t realty-web:dev \
+  --build-arg API_URL=http://host.docker.internal:3000 \
+  --build-arg NEXT_PUBLIC_SITE_URL=http://localhost:3001 \
+  --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:3000 \
+  --secret id=next_build_secret,src=/tmp/next_build_secret \
+  web
+```
+
+`host.docker.internal` — адрес основной машины изнутри сборки Docker Desktop. `NEXT_BUILD_SECRET` передаётся как секрет BuildKit: он доступен только на шаге сборки и не попадает ни в слои образа, ни в `docker image history`.
+
+Запуск:
+
+```bash
+docker run --rm -p 3001:3001 \
+  -e API_URL=http://host.docker.internal:3000 \
+  -e REDIS_HOST=host.docker.internal -e REDIS_PORT=6379 \
+  -e REVALIDATE_SECRET=... -e NEXT_BUILD_SECRET=... \
+  realty-web:dev
+```
+
+## Переменные: сборка и запуск
+
+| Переменная                                                                   | Когда читается  | Как передаётся                             |
+| ---------------------------------------------------------------------------- | --------------- | ------------------------------------------ |
+| `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_SENTRY_DSN` | при сборке      | `--build-arg`, вшиваются в бандл браузера  |
+| `API_URL`                                                                    | сборка и запуск | `--build-arg` для сборки, `-e` для запуска |
+| `NEXT_BUILD_SECRET`                                                          | сборка и запуск | `--secret` для сборки, `-e` для запуска    |
+| `REVALIDATE_SECRET`, `REDIS_HOST`, `REDIS_PORT`, `SENTRY_*`                  | при запуске     | `-e` / файл окружения, в бандл не попадают |
+
+Значения `NEXT_PUBLIC_*` фиксируются в момент сборки. Образ, собранный с адресом стенда, в прод не выкатывается: для прода собирается отдельный образ со своими `--build-arg`.
+
+## Размер образа
+
+| Сборка                                      | Размер (сжатый) | На диске |
+| ------------------------------------------- | --------------: | -------: |
+| В один этап (`docker build --target build`) |          522 MB |  1.93 GB |
+| Многоэтапная (`output: "standalone"`)       |          100 MB |   440 MB |
+
+В многоэтапном образе только `server.js`, `.next` (сборка и статика), `public` и 13 пакетов, которые Next.js отобрал в `node_modules` для сервера. Исходников, пакетов для разработки и файлов окружения в нём нет.
+
 # Отчёт сборки
 
 ## Таблица показывает фактический режим сборки маршрутов и размер загрузки по результатам сборки.

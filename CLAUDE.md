@@ -61,6 +61,9 @@ Being built in p3-w4-d4; files below may not exist yet. Check before referring t
   `src/generated/` next to `dist`. Leaving one out breaks things only at runtime.
 - `web` builds with `output: "standalone"`. `NEXT_PUBLIC_*` are baked in at build time (one image per
   environment); server-side vars (`API_URL`, secrets, Redis) are passed at run time.
+- The `web` image build prerenders from a running `api` (`--build-arg API_URL=...`,
+  `NEXT_BUILD_SECRET` via `--secret`, never `ARG`). Commands: `web/README.md`. With `cacheComponents`,
+  `generateStaticParams` must not return `[]`: Next 16 fails the build.
 - `docker-compose.yml` (root, dev): `postgres`, `redis`, `rabbitmq`, `api`, `worker`, `web`.
   Prod overlay: `docker compose -f docker-compose.yml -f <prod file> up`. Prod images are tagged with
   the commit hash.

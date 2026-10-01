@@ -1,0 +1,33 @@
+# Dependencies and build output: rebuilt inside the image for Linux
+node_modules
+.next
+out
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets
+.env
+.env.*
+*.pem
+
+# VCS, agent and editor config
+.git
+.gitignore
+.claude
+.agents
+AGENTS.md
+CLAUDE.md
+.vscode
+.idea
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Not needed to build
+coverage
+README.md
+Dockerfile
+.dockerignore
