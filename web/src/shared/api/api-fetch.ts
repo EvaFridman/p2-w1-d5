@@ -164,6 +164,33 @@ export async function apiFetch<T>(path: string, options: RequestOptionsType = {}
   return result.data;
 }
 
+const PROXIED_HEADERS = [
+  "content-type",
+  "content-length",
+  "cache-control",
+  "etag",
+  "last-modified",
+];
+
+export async function apiProxy(
+  path: string,
+  options: Pick<RequestOptionsType, "skipAuth"> = {},
+): Promise<Response> {
+  const headers: Record<string, string> = { "x-request-id": getRequestId() };
+  const session = options.skipAuth ? null : await getSession();
+  if (session) headers["Authorization"] = `Bearer ${session.accessToken}`;
+
+  const response = await fetch(`${process.env.API_URL}${path}`, { headers, cache: "no-store" });
+
+  const proxiedHeaders = new Headers();
+  for (const name of PROXIED_HEADERS) {
+    const value = response.headers.get(name);
+    if (value) proxiedHeaders.set(name, value);
+  }
+
+  return new Response(response.body, { status: response.status, headers: proxiedHeaders });
+}
+
 export async function apiFetchWithMeta<T>(
   path: string,
   options: RequestOptionsType = {},

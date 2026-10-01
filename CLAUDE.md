@@ -74,7 +74,9 @@ Being built in p3-w4-d4; files below may not exist yet. Check before referring t
   the commit hash.
 - Containers reach each other by service name (`postgres`, `redis`, `rabbitmq`, `api`, `web`), never
   `localhost`. Addresses come from env vars, not code.
-- In prod only `web` publishes a port; DB, Redis, broker UI and `api` are internal.
+- In prod only `web` publishes a port; DB, Redis, broker UI and `api` are internal. Browser-facing
+  api files go through web: `app/files/[...path]` and `app/static/[...path]` forward to `api` via
+  `apiProxy` in `shared/api/api-fetch.ts`, so `PUBLIC_URL` points at the site, not at `api`.
 - Startup order uses `healthcheck` + `depends_on: condition: service_healthy`, never sleeps in code.
   `api` checks `/health/live`; `worker` has no healthcheck.
 - Named volumes: Postgres data, Redis data, `uploads` (mounted into both `api` and `worker`).
