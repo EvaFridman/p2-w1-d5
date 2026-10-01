@@ -1,0 +1,29 @@
+@use "@/shared/styles" as s;
+
+.page {
+  padding-block: var(--space-8);
+
+  @include s.upto(tablet) {
+    padding-block: var(--space-5);
+  }
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: var(--control-height-md);
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-md);
+
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-text);
+  text-decoration: none;
+
+  background-color: var(--color-primary);
+
+  &:hover {
+    background-color: var(--color-primary-hover);
+  }
+}

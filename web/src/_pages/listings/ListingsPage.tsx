@@ -6,6 +6,7 @@ import { getSession } from "@/shared/session";
 import { getArrayParam, getStringParam } from "@/shared/lib/params";
 import { ListingFilterPanel } from "@/features/listing-filter/catalog/ListingsFilter";
 import { ListingSort } from "@/features/listing-filter/catalog/ListingSort";
+import { SaveSearchForm } from "@/features/saved-search-save/SaveSearchForm";
 import { ListingViewSwitcher } from "@/features/listing-view/ListingViewSwitcher";
 import { CatalogFreshness } from "@/entities/listing/ui/CatalogFreshness";
 import { ListingInfiniteList } from "@/features/listing-infinite-query/ListingInfiniteList";
@@ -77,7 +78,13 @@ export async function ListingsPage({ searchParams, lockedDistrict }: Props) {
         </header>
 
         <section className={styles.content}>
-          <ListingFilterPanel districts={districts} lockedDistrictId={lockedDistrict?.id} />
+          <div className={styles.sidebar}>
+            <ListingFilterPanel districts={districts} lockedDistrictId={lockedDistrict?.id} />
+            <SaveSearchForm
+              isAuthenticated={isAuthenticated}
+              lockedDistrictId={lockedDistrict?.id}
+            />
+          </div>
 
           <div className={styles.results}>
             <div className={styles.resultsHeader}>

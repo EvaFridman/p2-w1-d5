@@ -8,6 +8,7 @@ import styles from "./AccountTabs.module.css";
 const TABS = [
   { id: "favorites", label: "Избранное", href: "/account/favorites" },
   { id: "viewings", label: "Мои заявки", href: "/account/viewings" },
+  { id: "searches", label: "Сохранённые поиски", href: "/account/searches" },
   { id: "profile", label: "Профиль", href: "/account/profile" },
 ] as const;
 

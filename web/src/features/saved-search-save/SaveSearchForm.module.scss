@@ -1,0 +1,125 @@
+@use "@/shared/styles" as s;
+
+.trigger,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: var(--control-height-md);
+  padding-inline: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-decoration: none;
+
+  background-color: var(--color-surface);
+
+  transition: border-color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary);
+  }
+}
+
+.trigger {
+  width: 100%;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  background-color: var(--color-surface);
+
+  @include s.from(tablet) {
+    padding: var(--space-4);
+  }
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.input {
+  width: 100%;
+  min-height: var(--control-height-md);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+
+  background-color: var(--color-surface);
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+
+  @include s.upto(tablet) {
+    flex-direction: column;
+  }
+}
+
+.submit {
+  flex: 1;
+
+  min-height: var(--control-height-md);
+  padding-inline: var(--space-4);
+  border: 0;
+  border-radius: var(--radius-md);
+
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-text);
+
+  background-color: var(--color-primary);
+
+  transition: background-color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-primary-hover);
+  }
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.7;
+  }
+}
+
+.error,
+.success {
+  font-size: var(--font-size-sm);
+}
+
+.error {
+  color: var(--color-danger);
+}
+
+.success {
+  @include s.line-clamp(3);
+
+  color: var(--color-text);
+}
+
+.link {
+  align-self: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+}

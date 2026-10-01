@@ -1,7 +1,11 @@
 import type { PrismaService } from '../../../prisma/prisma.service.js';
 import type { MailService } from '../../../mail/mail.service.js';
 import type { MailPayload } from '../mail.consumer.js';
-import type { UserMailPayload, ViewingMailPayload, DigestStatusChange } from '../../../mail/mail.service.js';
+import type {
+  UserMailPayload,
+  ViewingMailPayload,
+  DigestStatusChange,
+} from '../../../mail/mail.service.js';
 
 export async function handleAgentDigest(
   payload: MailPayload,

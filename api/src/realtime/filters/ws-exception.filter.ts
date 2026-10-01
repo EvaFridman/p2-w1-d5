@@ -14,9 +14,12 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
 
     if (typeof error === 'object' && error !== null) {
       const errorObj = error as Record<string, unknown>;
-      
-      message = typeof errorObj.message === 'string' ? errorObj.message : message;
-      details = Array.isArray(errorObj.details) ? (errorObj.details as string[]) : null;
+
+      message =
+        typeof errorObj.message === 'string' ? errorObj.message : message;
+      details = Array.isArray(errorObj.details)
+        ? (errorObj.details as string[])
+        : null;
       code = typeof errorObj.code === 'string' ? errorObj.code : null;
     } else if (typeof error === 'string') {
       message = error;

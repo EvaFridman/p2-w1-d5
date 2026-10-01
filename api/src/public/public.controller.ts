@@ -11,7 +11,10 @@ import {
 } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { OptionalAuth } from '../auth/decorators/optional-auth.decorator.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
 import { PublicService } from './public.service.js';
+import { SavedSearchesService } from '../saved-searches/saved-searches.service.js';
+import { CreateSavedSearchDto } from '../saved-searches/dto/create-saved-search.dto.js';
 import { UnauthorizedError } from '../errors/app.exception.js';
 import { PublicListingsDto } from './dto/public-listings.dto.js';
 import { ListDistrictsDto } from '../districts/dto/list-districts.dto.js';
@@ -29,7 +32,10 @@ import { Throttle } from '@nestjs/throttler';
 @ApiTags('Витрина')
 @Controller('public')
 export class PublicController {
-  constructor(private readonly publicService: PublicService) {}
+  constructor(
+    private readonly publicService: PublicService,
+    private readonly savedSearchesService: SavedSearchesService,
+  ) {}
 
   @ApiOperation({ summary: 'Список опубликованных объявлений для витрины' })
   @ApiResponse({
@@ -172,6 +178,76 @@ export class PublicController {
   ) {
     if (!request.user) throw new UnauthorizedError('User context is missing');
     return await this.publicService.removeFavorite(listingId, request.user);
+  }
+
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Сохранённые поиски текущего клиента' })
+  @ApiResponse({ status: 200, description: 'Список сохранённых поисков' })
+  @ApiResponse({ status: 401, description: 'Токен отсутствует или невалиден' })
+  @ApiResponse({ status: 403, description: 'Доступно только клиентам' })
+  @Roles('client')
+  @Get('saved-searches')
+  async findAllSavedSearches(@Req() request: Request) {
+    if (!request.user) throw new UnauthorizedError('User context is missing');
+    return await this.savedSearchesService.findAll(request.user.id);
+  }
+
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Сохранить текущий набор фильтров каталога' })
+  @ApiResponse({ status: 201, description: 'Поиск сохранён' })
+  @ApiResponse({ status: 400, description: 'Некорректное тело запроса' })
+  @ApiResponse({ status: 401, description: 'Токен отсутствует или невалиден' })
+  @ApiResponse({ status: 403, description: 'Доступно только клиентам' })
+  @ApiResponse({
+    status: 409,
+    description: 'Такой набор фильтров или такое имя уже сохранены',
+  })
+  @ApiResponse({
+    status: 422,
+    description:
+      'Каталог не принимает эти параметры или достигнут лимит сохранений',
+  })
+  @Roles('client')
+  @Post('saved-searches')
+  async createSavedSearch(
+    @Body() dto: CreateSavedSearchDto,
+    @Req() request: Request,
+  ) {
+    if (!request.user) throw new UnauthorizedError('User context is missing');
+    return await this.savedSearchesService.create(request.user.id, dto);
+  }
+
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Удалить свой сохранённый поиск' })
+  @ApiResponse({ status: 200, description: 'Поиск удалён' })
+  @ApiResponse({ status: 401, description: 'Токен отсутствует или невалиден' })
+  @ApiResponse({ status: 403, description: 'Доступно только клиентам' })
+  @ApiResponse({
+    status: 404,
+    description: 'Поиск не найден или принадлежит другому клиенту',
+  })
+  @Roles('client')
+  @Delete('saved-searches/:id')
+  async removeSavedSearch(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() request: Request,
+  ) {
+    if (!request.user) throw new UnauthorizedError('User context is missing');
+    return await this.savedSearchesService.remove(request.user.id, id);
+  }
+
+  @ApiOperation({
+    summary: 'Параметры сохранённого поиска по публичной ссылке',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Строка параметров каталога и признак устаревания, без имени',
+  })
+  @ApiResponse({ status: 404, description: 'Поиск не найден' })
+  @Public()
+  @Get('saved-searches/by-token/:token')
+  async findSavedSearchByToken(@Param('token') token: string) {
+    return await this.savedSearchesService.findByToken(token);
   }
 
   @ApiOperation({

@@ -19,16 +19,14 @@ export class FavoritesService {
   private handlePrismaError(error: unknown) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002')
-        throw new ConflictError(
-          'This listing is already in favorites',
-          ['favorites_userId_listingId_unique_idx'],
-        );
+        throw new ConflictError('This listing is already in favorites', [
+          'favorites_userId_listingId_unique_idx',
+        ]);
       if (error.code === 'P2025')
         throw new NotFoundError('Favorite record not found');
     }
     throw error;
   }
-
 
   private checkAccess(
     targetUserId: number,
