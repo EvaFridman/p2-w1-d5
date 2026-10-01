@@ -38,6 +38,15 @@ has "docker(-|${S}+)compose${S}(${A}${S})?down${S}(${A}${S})?(-v|--volumes)(${S}
 has "docker${S}+volume${S}+(rm|remove|prune)" && deny "docker volume removal deletes data"
 has "docker${S}+system${S}+prune${S}${A}--volumes" && deny "docker system prune --volumes deletes data"
 
+# The owner runs everything against the server and handles the vault (CONTRIBUTING, rule 4).
+# Local checks that touch neither stay allowed.
+# Command position only (line start or after ;, &, |, `(`), so text like a commit message passes.
+C="(^|[;&|(])${S}*"
+has "${C}ansible-vault(${S}|$)" && deny "ansible-vault: production secrets are handled by the owner"
+has "${C}ansible(-playbook)?${S}+" &&
+  ! has "${S}--(syntax-check|list-tasks|list-hosts|list-tags|version)(${S}|$)" &&
+  deny "ansible/ansible-playbook against the server: the owner runs it"
+
 has "(npm|pnpm|yarn)${S}(.*${S})?(install|i|ci|add)(${S}|$)" &&
   ask "dependency install: check the package name exists in the registry first"
 has "prisma${S}+(migrate${S}+(dev|deploy|resolve)|db${S}+(push|execute|seed))" &&

@@ -1,0 +1,7 @@
+# Non-secret settings of the production server. Secrets go into vault.yml next to this file.
+
+swap_size_mb: 2048
+
+# Docker Hub mirror, used only if pulls from Docker Hub fail on the server,
+# e.g. ["https://mirror.gcr.io"].
+docker_registry_mirrors: []

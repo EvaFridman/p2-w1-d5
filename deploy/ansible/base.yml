@@ -1,0 +1,5 @@
+# Server baseline: packages, firewall, swap, Docker with Compose. Safe to re-run.
+- name: Prepare the server
+  hosts: prod
+  roles:
+    - base
