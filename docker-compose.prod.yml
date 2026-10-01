@@ -1,0 +1,55 @@
+# Production overrides for docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Ready images by commit-hash tag, restart on failure, no source mounts, and only the web port
+# is published. The same images run on staging and production; only the env file differs.
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  postgres:
+    <<: *restart
+    ports: !reset []
+
+  redis:
+    <<: *restart
+    ports: !reset []
+
+  rabbitmq:
+    <<: *restart
+    ports: !reset []
+
+  api:
+    <<: *restart
+    build: !reset null
+    image: realty-api:${IMAGE_TAG:?set IMAGE_TAG to the commit hash of the images}
+    command: !reset null
+    environment:
+      NODE_ENV: production
+    volumes: !override
+      - uploads:/app/uploads
+    ports: !reset []
+    healthcheck:
+      start_period: 20s
+
+  worker:
+    <<: *restart
+    build: !reset null
+    image: realty-api:${IMAGE_TAG:?set IMAGE_TAG to the commit hash of the images}
+    command: !override ["node", "dist/worker.js"]
+    environment:
+      NODE_ENV: production
+    volumes: !override
+      - uploads:/app/uploads
+
+  web:
+    <<: *restart
+    build: !reset null
+    image: realty-web:${IMAGE_TAG:?set IMAGE_TAG to the commit hash of the images}
+    command: !reset null
+    environment:
+      NODE_ENV: production
+    volumes: !reset []
+    healthcheck:
+      timeout: 5s
+      start_period: 20s

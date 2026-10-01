@@ -1,62 +1,71 @@
 ## Запуск в Docker
 
-Шесть сервисов из `docker-compose.yml`: `postgres`, `redis`, `rabbitmq`, `api`, `worker` (тот же образ, что `api`, разбирает очередь и отправляет письма), `web`. Наружу открыт только порт витрины `3001`. Сервер Temporal и его воркер в compose не входят и запускаются отдельно.
+Шесть сервисов: `postgres`, `redis`, `rabbitmq`, `api`, `worker` (тот же образ, что `api`, разбирает очередь и отправляет письма), `web`. Сервер Temporal и его воркер в compose не входят (см. «Temporal» ниже).
 
-1. Значения переменных:
+Два режима — два файла:
 
-   ```bash
-   cp .env.example .env   # заполнить; .env в репозиторий не попадает
-   ```
+- `docker-compose.yml` — **разработка**: образы собираются из исходников, папки с кодом подключены внутрь, приложения перезапускаются при правке, порты сервисов открыты на `localhost`, доступна панель брокера.
+- `docker-compose.prod.yml` — **перекрытия для прода**: готовые образы по тегу (хеш коммита), перезапуск при падении, без подключённых папок с кодом, наружу открыт только порт витрины.
 
-2. База, кеш и брокер:
+Значения переменных — в `.env` рядом с compose (в репозиторий не попадает):
 
-   ```bash
-   docker compose up -d postgres redis rabbitmq
-   ```
+```bash
+cp .env.example .env   # заполнить
+```
 
-3. Образ `api` (из него же запускаются `worker`, миграции и сиды):
+### Разработка
 
-   ```bash
-   docker compose build api
-   ```
+```bash
+docker compose up -d --build
+docker compose run --rm api npx prisma migrate deploy
+docker compose run --rm api npx prisma db seed
+```
 
-4. Схема и данные — одноразовыми контейнерами из образа `api`, которые удаляются после выполнения:
+Сиды создают районы, 36 объявлений (30 опубликованных) и пользователей `moderator@realty.local`, `agent1@realty.local`, `agent2@realty.local`, `client@realty.local` с паролем из `SEED_PASSWORD`. В базе, где уже есть пользователи, сиды ничего не делают. Вместо сидов можно перенести копию локальной базы (локальная база только читается):
 
-   ```bash
-   docker compose run --rm api npx prisma migrate deploy
-   docker compose run --rm api npx prisma db seed
-   ```
+```bash
+pg_dump --no-owner --no-privileges "<DATABASE_URL локальной базы>" \
+  | docker compose exec -T postgres sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
 
-   Сиды создают районы, 36 объявлений (30 опубликованных) и пользователей `moderator@realty.local`, `agent1@realty.local`, `agent2@realty.local`, `client@realty.local` с паролем из `SEED_PASSWORD`. В базе, где уже есть пользователи, сиды ничего не делают.
+Правка в `api/src` перезапускает `api` и `worker` (`nest start --watch`), правка в `web/app`, `web/src`, `web/public` подхватывает `next dev` — пересобирать образ не нужно. Пересборка нужна после изменения зависимостей или `schema.prisma`.
 
-   Вместо сидов можно перенести копию локальной базы (локальная база только читается):
+| Сервис          | Адрес на машине          | Переменная для другого порта |
+| --------------- | ------------------------ | ---------------------------- |
+| витрина         | <http://localhost:3001>  | —                            |
+| `api`           | <http://localhost:3000>  | `API_HOST_PORT`              |
+| PostgreSQL      | `localhost:5433`         | `POSTGRES_HOST_PORT`         |
+| Redis           | `localhost:6380`         | `REDIS_HOST_PORT`            |
+| RabbitMQ (AMQP) | `localhost:5673`         | `RABBITMQ_HOST_PORT`         |
+| панель RabbitMQ | <http://localhost:15673> | `RABBITMQ_UI_HOST_PORT`      |
 
-   ```bash
-   pg_dump --no-owner --no-privileges "<DATABASE_URL локальной базы>" \
-     | docker compose exec -T postgres sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-   ```
+Порты базы, Redis и брокера сдвинуты, чтобы не пересекаться с локально установленными сервисами. Все порты, кроме витрины, открыты только на `127.0.0.1`.
 
-5. `api` и `worker`:
+### Продакшен
 
-   ```bash
-   docker compose up -d api worker
-   ```
+Образы собираются заранее и помечаются хешем коммита — так видно, что именно запущено, а откат сводится к запуску предыдущего тега. Сборка витрины заранее рендерит страницы и обращается к API, поэтому во время сборки должен работать `api` на порту `3000` (например, стек для разработки):
 
-6. Образ витрины. Сборка заранее рендерит страницы и обращается к API, а шаги сборки не видят сеть compose. Поэтому на время сборки поднимается временный `api` с портом `3000` на машине:
+```bash
+export IMAGE_TAG=$(git rev-parse --short HEAD)
+set -a; . ./.env; set +a
 
-   ```bash
-   docker compose run -d --rm --no-deps --name realty-api-build -p 3000:3000 api
-   docker compose build web
-   docker rm -f realty-api-build
-   ```
+docker build -t realty-api:$IMAGE_TAG api
+docker build -t realty-web:$IMAGE_TAG \
+  --build-arg API_URL=http://host.docker.internal:3000 \
+  --build-arg NEXT_PUBLIC_SITE_URL="$SITE_URL" \
+  --build-arg NEXT_PUBLIC_API_BASE_URL="$SITE_URL" \
+  --secret id=next_build_secret,env=NEXT_BUILD_SECRET \
+  web
+```
 
-7. Всё вместе:
+Запуск — двумя файлами, второй перекрывает первый:
 
-   ```bash
-   docker compose up -d
-   ```
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm api npx prisma migrate deploy
+```
 
-   Витрина: <http://localhost:3001>.
+Один и тот же образ `api` поднимается на стенде и в проде, отличаясь только переменными: для каждого окружения свой файл (`--env-file .env.staging`, `--env-file .env.production`). Секреты передаются при запуске и в образ не попадают. Исключение — `NEXT_PUBLIC_*` витрины: они вшиваются в бандл при сборке, поэтому образ `web` собирается для каждого окружения отдельно.
 
 Сервисы запускаются по готовности, а не по факту старта контейнера: `api` и `worker` ждут, пока `postgres`, `redis` и `rabbitmq` пройдут проверки состояния, `web` ждёт здорового `api`. Состояние проверок — в `docker compose ps`. У `api` проверка обращается к `/health/live` и не зависит от базы и Redis; доступность зависимостей показывает `/health/ready`. У `worker` нет HTTP-порта, поэтому проверки состояния у него нет.
 
@@ -103,6 +112,27 @@ docker compose run --rm api npx prisma migrate deploy
 ```bash
 docker compose run --rm api npx prisma db seed
 ```
+
+### Temporal
+
+Сервер Temporal и его воркер (`start:temporal-worker`) в compose не входят и запускаются отдельно, на машине:
+
+```bash
+temporal server start-dev --db-filename ~/.temporal/realty.db
+npm --prefix api run start:temporal-worker
+```
+
+Без `--db-filename` сервер хранит историю workflow только в памяти, и она пропадает при перезапуске.
+
+Адрес сервера задаёт переменная `TEMPORAL_ADDRESS`. Если она не задана, используется адрес SDK по умолчанию — `localhost`, порт `7233`. Контейнеры по умолчанию обращаются к Temporal на машине: `host.docker.internal:7233`.
+
+Регистрация cron-workflow:
+
+```bash
+docker compose run --rm api node dist/temporal/scheduler.js
+```
+
+При остановленном Temporal остальные сервисы работают как обычно, а запуск workflow завершается ошибкой соединения, которая попадает в журнал: `Cannot connect to Temporal: workflows were not started` с адресом и причиной.
 
 ### ⚠️ Удаление данных
 

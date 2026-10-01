@@ -65,13 +65,14 @@ Being built in p3-w4-d4; files below may not exist yet. Check before referring t
 - The `web` image build prerenders from a running `api` (`--build-arg API_URL=...`,
   `NEXT_BUILD_SECRET` via `--secret`, never `ARG`). Commands: `web/README.md`. With `cacheComponents`,
   `generateStaticParams` must not return `[]`: Next 16 fails the build.
-- `docker-compose.yml` (root, dev): `postgres`, `redis`, `rabbitmq`, `api`, `worker`, `web`.
-  Values come from root `.env` (untracked; names in root `.env.example`); service addresses are
-  written in the compose file. Startup order and the web build step: root `README.md`.
-- Build steps cannot reach the compose network, so `docker compose build web` needs an api on
-  host port 3000 (a one-off `docker compose run -p 3000:3000 api`, see README).
-- Prod overlay: `docker compose -f docker-compose.yml -f <prod file> up`. Prod images are tagged with
-  the commit hash.
+- `docker-compose.yml` (root) is the dev setup: `postgres`, `redis`, `rabbitmq`, `api`, `worker`,
+  `web`. Sources are bind-mounted; `api`/`worker` build the `dev` stage (`nest start --watch`; it
+  needs `ps`, hence `procps`), `web` builds the `deps` stage (`next dev`, no prerender). Ports are
+  published on 127.0.0.1, with Postgres/Redis/AMQP/broker UI offset to 5433/6380/5673/15673.
+  Values come from root `.env` (untracked; names in root `.env.example`).
+- `docker-compose.prod.yml` overlays it: images `realty-{api,web}:${IMAGE_TAG}` (commit hash, required),
+  no builds or bind mounts, `restart: unless-stopped`, only `web` publishes a port. Prod images are
+  built with plain `docker build`; the `web` build needs an api on host port 3000. Commands: README.
 - Containers reach each other by service name (`postgres`, `redis`, `rabbitmq`, `api`, `web`), never
   `localhost`. Addresses come from env vars, not code.
 - In prod only `web` publishes a port; DB, Redis, broker UI and `api` are internal. Browser-facing
@@ -82,7 +83,8 @@ Being built in p3-w4-d4; files below may not exist yet. Check before referring t
 - Named volumes: Postgres data, Redis data, `uploads` (mounted into both `api` and `worker`).
 - Secrets come from untracked env files at run time; never `COPY`/`ARG`/`ENV` them into an image.
   Keep `api/.env.example` and `web/.env.example` complete when adding variables.
-- Temporal server and `start:temporal-worker` are not in compose; address from `TEMPORAL_ADDRESS`.
+- Temporal server and `start:temporal-worker` are not in compose. Its address is `TEMPORAL_ADDRESS`;
+  unset means the SDK default (localhost, port 7233), so never write that address in code.
 
 ## Before calling work done (from root)
 
