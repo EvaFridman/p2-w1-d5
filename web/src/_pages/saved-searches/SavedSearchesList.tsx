@@ -9,6 +9,7 @@ import {
   useSavedSearches,
 } from "@/entities/saved-search/api/use-saved-searches";
 import { Button, EmptyState, StatusBadge } from "@/shared/ui";
+import { APP_TIME_ZONE } from "@/shared/lib/format";
 
 import styles from "./SavedSearchesList.module.scss";
 
@@ -17,7 +18,11 @@ type Props = {
 };
 
 function formatSavedAt(value: string) {
-  return new Date(value).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+  return new Date(value).toLocaleDateString("ru-RU", {
+    timeZone: APP_TIME_ZONE,
+    day: "numeric",
+    month: "long",
+  });
 }
 
 export function SavedSearchesList({ initialData }: Props) {

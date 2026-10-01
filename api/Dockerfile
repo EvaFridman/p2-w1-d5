@@ -2,27 +2,40 @@
 
 ARG NODE_IMAGE=node:24.21.0-trixie-slim
 
-# Build: all dependencies, Prisma client, nest build.
+# Build: all dependencies, Prisma client, nest build. Runs as the node user, so the dev stage
+# built on it (and its watch-mode recompiles) never needs root.
 FROM ${NODE_IMAGE} AS build
 WORKDIR /app
+RUN chown node:node /app
+USER node
 
 # Rarely changing files first, so a source edit does not reinstall dependencies.
 # The schema is needed here because postinstall runs `prisma generate`.
-COPY package.json package-lock.json ./
-COPY prisma/schema.prisma ./prisma/
+COPY --chown=node:node package.json package-lock.json ./
+COPY --chown=node:node prisma/schema.prisma ./prisma/
 RUN npm ci --legacy-peer-deps
 
-COPY nest-cli.json tsconfig.json tsconfig.build.json ./
-COPY src ./src
+COPY --chown=node:node nest-cli.json tsconfig.json tsconfig.build.json ./
+COPY --chown=node:node src ./src
 RUN npm run build
 
 # Dev: watch mode with mounted sources (docker-compose.yml). `nest start --watch` finds the
 # old app process with `ps` before restarting it; slim images have no ps, so the old process
 # keeps the port and every restart fails with EADDRINUSE.
 FROM build AS dev
+USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends procps \
     && rm -rf /var/lib/apt/lists/*
+# Runtime files the build stage lacks, same as in the runtime stage below: migrations and
+# config for Prisma, the PDF font (mail attachments) and /static.
+COPY prisma ./prisma
+COPY prisma7.config.ts ./
+COPY fonts ./fonts
+COPY public ./public
+# A named volume mounted here takes this ownership on first use.
+RUN mkdir -p uploads/photos uploads/avatars && chown -R node:node uploads
+USER node
 
 # Production dependencies only, with install scripts: @prisma/engines downloads the
 # schema engine that `prisma migrate deploy` needs. The root postinstall runs

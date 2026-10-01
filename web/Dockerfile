@@ -3,15 +3,18 @@
 ARG NODE_IMAGE=node:24.21.0-trixie-slim
 
 # Dependencies and sources. The dev setup runs `next dev` from this stage.
+# Runs as the node user: next dev in the dev setup writes .next here.
 FROM ${NODE_IMAGE} AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+RUN chown node:node /app
+USER node
 
 # Rarely changing files first, so a source edit does not reinstall dependencies.
-COPY package.json package-lock.json ./
+COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
 
-COPY . .
+COPY --chown=node:node . .
 
 # Build: next build. The build prerenders pages and calls the API,
 # so it needs a running api at API_URL (see README.md, "Сборка образа").

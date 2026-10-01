@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { PublicViewingType, ViewingStatus } from "@/entities/viewing/types";
 import { useMyViewings } from "@/entities/viewing/api/use-my-viewings";
 import { getUrl } from "@/shared/utils/safeUrl";
+import { APP_TIME_ZONE } from "@/shared/lib/format";
 import { Skeleton, EmptyState, StatusBadge, Loader, Button } from "@/shared/ui";
 
 import styles from "./ViewingsList.module.css";
@@ -41,6 +42,7 @@ const getBadgeVariant = (status: ViewingStatus) => {
 
 function formatViewingDate(value: string) {
   return new Date(value).toLocaleString("ru-RU", {
+    timeZone: APP_TIME_ZONE,
     day: "numeric",
     month: "long",
     hour: "2-digit",

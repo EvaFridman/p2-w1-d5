@@ -45,6 +45,8 @@ x-api-dev-volumes: &api-dev-volumes
   - uploads:/app/uploads
   - ./api/src:/app/src
   - /app/src/generated
+  # New migrations are picked up by `prisma migrate deploy` without a rebuild.
+  - ./api/prisma:/app/prisma
 
 services:
   postgres:

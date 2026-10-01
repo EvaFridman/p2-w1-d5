@@ -17,7 +17,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   let district;
 
   try {
-    district = await districtApi.getDistrictBySlug(slug);
+    district = await districtApi.getCachedDistrictBySlug(slug);
   } catch {
     notFound();
   }

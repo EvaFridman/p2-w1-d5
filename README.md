@@ -7,26 +7,47 @@
 - `docker-compose.yml` — **разработка**: образы собираются из исходников, папки с кодом подключены внутрь, приложения перезапускаются при правке, порты сервисов открыты на `localhost`, доступна панель брокера.
 - `docker-compose.prod.yml` — **перекрытия для прода**: готовые образы по тегу (хеш коммита), перезапуск при падении, без подключённых папок с кодом, наружу открыт только порт витрины.
 
-Значения переменных — в `.env` рядом с compose (в репозиторий не попадает):
+### Что нужно на машине
+
+- Docker Desktop (Compose 2.24 или новее: `docker compose version`), git, `openssl`.
+- Свободные порты `3001`, `3000`, `5433`, `6380`, `5673`, `15673` (другие можно задать в `.env`, см. таблицу ниже).
+- Temporal нужен только для cron-задач (см. «Temporal»); без него всё остальное работает.
+
+### Разработка: свежий клон за четыре команды (с сидами)
 
 ```bash
-cp .env.example .env   # заполнить
-```
-
-### Разработка
-
-```bash
+./scripts/init-env.sh   # .env из .env.example: случайные пароли и секреты, значения для локального запуска
 docker compose up -d --build
 docker compose run --rm api npx prisma migrate deploy
 docker compose run --rm api npx prisma db seed
 ```
 
-Сиды создают районы, 36 объявлений (30 опубликованных) и пользователей `moderator@realty.local`, `agent1@realty.local`, `agent2@realty.local`, `client@realty.local` с паролем из `SEED_PASSWORD`. В базе, где уже есть пользователи, сиды ничего не делают. Вместо сидов можно перенести копию локальной базы (локальная база только читается):
+`.env` в репозиторий не попадает. Скрипт не перезаписывает существующий `.env` и печатает пароль пользователей из сидов. Заполнить `.env` можно и вручную: `cp .env.example .env`, комментарии в файле подсказывают значения.
+
+Подъём свежего клона с нуля по этим командам — от `git clone` до первой страницы каталога с объявлениями — занял **2 мин 33 с** (MacBook Pro на Apple Silicon): сборка образов без кеша 125 с, запуск 13 с, миграции 2 с, сиды 11 с. Базовые образы `node`, `postgres`, `redis`, `rabbitmq` были уже скачаны; на новой машине добавится их загрузка.
+
+После запуска:
+
+- витрина — <http://localhost:3001>, в каталоге 30 объявлений;
+- вход — `moderator@realty.local` (а также `agent1@`, `agent2@`, `client@realty.local`) с паролем `SEED_PASSWORD` из `.env`;
+- заявка на просмотр из карточки объявления приводит к записи `Mail sent by worker` в `docker compose logs worker`;
+- `docker compose ps` — у всех сервисов, кроме `worker`, статус `(healthy)`.
+
+Сиды создают районы, 36 объявлений (30 опубликованных) и четырёх пользователей. Они запускаются только этой командой — не при сборке и не при `up`, — а в базе, где уже есть пользователи, ничего не делают.
+
+#### Вместо сидов — копия рабочей базы
+
+Рабочая база проекта — в Docker-стеке (том `realty_pgdata`), загруженные фото и аватары — в томе `realty_uploads`. Чтобы поднять новый стек (другая машина, свежий клон) с теми же данными, снимите обе копии командами из раздела «Обслуживание» и восстановите их в **пустую базу до миграций**: копия содержит всю схему, и в базу, где миграции уже создали таблицы, она не зальётся (`type "DealType" already exists`).
 
 ```bash
-pg_dump --no-owner --no-privileges "<DATABASE_URL локальной базы>" \
-  | docker compose exec -T postgres sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+./scripts/init-env.sh
+docker compose up -d --build
+docker compose exec -T postgres sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < backup-2026-10-01.sql
+docker compose exec -T api tar -xf - -C /app/uploads < uploads-2026-10-01.tar
+docker compose run --rm api npx prisma migrate deploy   # применит только миграции новее копии
 ```
+
+Postgres.app на машине — старая копия, с которой проект работал до Docker; новые данные в неё не попадают. Если всё же нужна она, вместо файла копии используйте `pg_dump --no-owner --no-privileges "<DATABASE_URL>" | docker compose exec -T postgres sh -c 'psql …'`, а файлы возьмите из `api/uploads`: `COPYFILE_DISABLE=1 tar --no-xattrs --no-fflags -C api/uploads -cf - photos avatars | docker compose exec -T api tar -xf - -C /app/uploads`.
 
 Правка в `api/src` перезапускает `api` и `worker` (`nest start --watch`), правка в `web/app`, `web/src`, `web/public` подхватывает `next dev` — пересобирать образ не нужно. Пересборка нужна после изменения зависимостей или `schema.prisma`.
 
@@ -65,6 +86,14 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm api npx prisma migrate deploy
 ```
 
+`IMAGE_TAG` нужен для **любой** команды с файлом перекрытий, в том числе `ps`, `logs` и `down`: без него compose не читает файл. Остановка:
+
+```bash
+IMAGE_TAG=<тег запущенных образов> docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+```
+
+Возврат к разработке — `docker compose up -d`: контейнеры пересоздаются по `docker-compose.yml`, тома с данными общие.
+
 Один и тот же образ `api` поднимается на стенде и в проде, отличаясь только переменными: для каждого окружения свой файл (`--env-file .env.staging`, `--env-file .env.production`). Секреты передаются при запуске и в образ не попадают. Исключение — `NEXT_PUBLIC_*` витрины: они вшиваются в бандл при сборке, поэтому образ `web` собирается для каждого окружения отдельно.
 
 Сервисы запускаются по готовности, а не по факту старта контейнера: `api` и `worker` ждут, пока `postgres`, `redis` и `rabbitmq` пройдут проверки состояния, `web` ждёт здорового `api`. Состояние проверок — в `docker compose ps`. У `api` проверка обращается к `/health/live` и не зависит от базы и Redis; доступность зависимостей показывает `/health/ready`. У `worker` нет HTTP-порта, поэтому проверки состояния у него нет.
@@ -95,10 +124,17 @@ docker compose logs -f api
 docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB"' > backup-$(date +%F).sql
 ```
 
-Восстановление из копии в пустую базу:
+Восстановление из копии в пустую базу (до миграций):
 
 ```bash
 docker compose exec -T postgres sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < backup-2026-10-01.sql
+```
+
+Копия загруженных фото и аватаров (том `realty_uploads`) и восстановление:
+
+```bash
+docker compose exec -T api tar -C /app/uploads -cf - . > uploads-$(date +%F).tar
+docker compose exec -T api tar -xf - -C /app/uploads < uploads-2026-10-01.tar
 ```
 
 Миграции — одноразовым контейнером из образа `api`, а не внутри работающего приложения (`--rm` удаляет контейнер после выполнения):

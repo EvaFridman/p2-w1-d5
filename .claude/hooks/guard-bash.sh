@@ -19,6 +19,9 @@ ask() {
 }
 
 S='[[:space:]]'
+# Arguments of one command: anything up to the next ;, &, | or newline. Without this, a flag
+# from a later command in the same line (e.g. `grep -v`) is read as the docker command's flag.
+A='[^;&|]*'
 
 has "prisma${S}+migrate${S}+reset" && deny "prisma migrate reset drops and recreates the only local database"
 has "prisma${S}+db${S}+push.*--(force-reset|accept-data-loss)" && deny "prisma db push with a data-loss flag"
@@ -30,17 +33,17 @@ has "git${S}+clean${S}+-[a-zA-Z]*f" && deny "git clean -f deletes untracked file
 has "--no-verify" && deny "--no-verify skips the repository git hooks"
 has "(^|${S})rm${S}+-[a-zA-Z]*[rR][a-zA-Z]*${S}+(.*${S})?(/|~/?|\\\$HOME/?|\\*|\\./?)(${S}|$)" &&
   deny "recursive rm on /, ~, \$HOME, * or ."
-has "docker(-|${S}+)compose${S}(.*${S})?down${S}(.*${S})?(-v|--volumes)(${S}|$)" &&
+has "docker(-|${S}+)compose${S}(${A}${S})?down${S}(${A}${S})?(-v|--volumes)(${S}|$)" &&
   deny "docker compose down -v deletes the database, Redis and uploads volumes"
 has "docker${S}+volume${S}+(rm|remove|prune)" && deny "docker volume removal deletes data"
-has "docker${S}+system${S}+prune${S}.*--volumes" && deny "docker system prune --volumes deletes data"
+has "docker${S}+system${S}+prune${S}${A}--volumes" && deny "docker system prune --volumes deletes data"
 
 has "(npm|pnpm|yarn)${S}(.*${S})?(install|i|ci|add)(${S}|$)" &&
   ask "dependency install: check the package name exists in the registry first"
 has "prisma${S}+(migrate${S}+(dev|deploy|resolve)|db${S}+(push|execute|seed))" &&
   ask "Prisma command that changes the database"
 has "${S}-delete(${S}|$)|xargs${S}+rm" && ask "file deletion"
-has "docker${S}+((system|image|container|builder)${S}+prune|rm${S}+(.*${S})?-[a-zA-Z]*f)" &&
+has "docker${S}+((system|image|container|builder)${S}+prune|rm${S}+(${A}${S})?-[a-zA-Z]*f)" &&
   ask "Docker cleanup removes containers or images"
 
 exit 0
