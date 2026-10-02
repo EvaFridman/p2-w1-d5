@@ -11,7 +11,7 @@ app_dir: /opt/realty
 
 # Images CI published from main: the 7-char hash of the merge commit (git rev-parse --short=7 HEAD).
 # Changing it and re-running deploy.yml is a release; the previous value is a rollback.
-image_tag: "09d0332"
+image_tag: "648aac9"
 
 site_domain: realty-catalog.site
 
