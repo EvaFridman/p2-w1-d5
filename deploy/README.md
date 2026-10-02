@@ -98,6 +98,21 @@ ansible-playbook deploy.yml
 
 `restore.yml` отказывается работать, если в базе уже есть таблицы, и удаляет копии с сервера после восстановления.
 
+## Фото объявлений
+
+`picsum.photos` отвечает `403` на российские IP, поэтому на сервере фото из сидов не загружаются. Вместо них — 40 демо-фото из `api/public/demo` (раздаются как `/static/demo/*` через `web`; хост сайта разрешён в `remotePatterns` из `NEXT_PUBLIC_SITE_URL`). Один раз после деплоя образа с этими фото, из корня репозитория:
+
+```bash
+ssh realty 'realty-compose exec -T postgres psql -U realty -d realty' < deploy/sql/demo-photos.sql
+cd deploy/ansible && ansible-playbook deploy.yml   # сбросить кеш витрины
+```
+
+Скрипт меняет только ссылки на picsum и печатает `demo | picsum_left` (ожидается `0` во втором столбце). Исходные ссылки остаются в копии базы, снятой перед переносом.
+
+## Почта
+
+На сервере `MAIL_TRANSPORT=real`. У перенесённых пользователей адреса на настоящих почтовых доменах, поэтому письма адресатам из данных, созданных раньше `MAIL_LEGACY_BEFORE` (пользователи и заявки на просмотр), только пишутся в лог (`Mail to an address from imported data written to the log, not sent`). Зарегистрированные на сайте после этого момента получают настоящие письма. Исключения — `vault_mail_allowed_recipients` в Vault (через запятую), личные адреса в git не попадают.
+
 ## Стек на сервере
 
 На сервере работают три compose-файла: `docker-compose.yml`, `docker-compose.prod.yml` и `deploy/docker-compose.server.yml`. Третий добавляет то, что нужно только серверу:

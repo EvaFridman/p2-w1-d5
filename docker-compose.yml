@@ -33,6 +33,9 @@ x-api-env: &api-env
   SMTP_PORT: ${SMTP_PORT}
   SMTP_USER: ${SMTP_USER}
   SMTP_PASS: ${SMTP_PASS}
+  # Optional: addresses from data created before this moment get mail only in the log.
+  MAIL_LEGACY_BEFORE: ${MAIL_LEGACY_BEFORE:-}
+  MAIL_ALLOWED_RECIPIENTS: ${MAIL_ALLOWED_RECIPIENTS:-}
   PAGE_SIZE_DEFAULT: ${PAGE_SIZE_DEFAULT}
   PAGE_SIZE_MAX: ${PAGE_SIZE_MAX}
   LOG_LEVEL: ${LOG_LEVEL}

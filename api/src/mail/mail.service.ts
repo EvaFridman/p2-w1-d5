@@ -48,6 +48,15 @@ export type DigestStatusChange = {
 @Injectable()
 export class MailService {
   private transporter: Transporter;
+  // Mail to legacy addresses goes here instead: rendered, never sent.
+  private readonly logTransporter = nodemailer.createTransport({
+    streamTransport: true,
+    buffer: true,
+  }) as unknown as Transporter;
+  // Users and viewings created before MAIL_LEGACY_BEFORE come from imported data with addresses
+  // on real mail domains; real SMTP must not reach them. MAIL_ALLOWED_RECIPIENTS are exempt.
+  private readonly legacyBefore: Date | null;
+  private readonly allowedRecipients: Set<string>;
 
   constructor(
     private readonly configService: ConfigService,
@@ -55,6 +64,15 @@ export class MailService {
     private readonly pdfService: PdfService,
     private readonly logger: PinoLogger,
   ) {
+    const legacyBefore = this.configService.get<string>('MAIL_LEGACY_BEFORE');
+    this.legacyBefore = legacyBefore ? new Date(legacyBefore) : null;
+    this.allowedRecipients = new Set(
+      (this.configService.get<string>('MAIL_ALLOWED_RECIPIENTS') ?? '')
+        .split(',')
+        .map((address) => address.trim().toLowerCase())
+        .filter(Boolean),
+    );
+
     const transportType =
       this.configService.get<string>('MAIL_TRANSPORT') ?? 'stream';
 
@@ -101,11 +119,46 @@ export class MailService {
     return Buffer.concat(chunks);
   }
 
+  async isLegacyRecipient(to: MailOptions['to']): Promise<boolean> {
+    if (!this.legacyBefore) return false;
+    // Only single-address strings are sent by this service; anything else is not checked, so held.
+    if (typeof to !== 'string') return true;
+
+    const email = to.trim().toLowerCase();
+    if (this.allowedRecipients.has(email)) return false;
+    // An unparsable date holds everything rather than mailing strangers.
+    if (Number.isNaN(this.legacyBefore.getTime())) return true;
+
+    const createdBefore = { lt: this.legacyBefore };
+    const [users, viewings] = await Promise.all([
+      this.prisma.users.count({
+        where: {
+          email: { equals: email, mode: 'insensitive' },
+          createdAt: createdBefore,
+        },
+      }),
+      this.prisma.viewings.count({
+        where: {
+          clientEmail: { equals: email, mode: 'insensitive' },
+          createdAt: createdBefore,
+        },
+      }),
+    ]);
+    return users + viewings > 0;
+  }
+
   async sendMailSafely(options: MailOptions): Promise<unknown> {
     try {
       const from =
         this.configService.get<string>('MAIL_FROM') ??
         'no-reply@realty-board.local';
+      if (await this.isLegacyRecipient(options.to)) {
+        this.logger.info(
+          { subject: options.subject },
+          'Mail to an address from imported data written to the log, not sent',
+        );
+        return await this.logTransporter.sendMail({ from, ...options });
+      }
       return await this.transporter.sendMail({ from, ...options });
     } catch (err) {
       throw new ExternalServiceError('Failed to send email', [

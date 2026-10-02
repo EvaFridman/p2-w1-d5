@@ -29,9 +29,11 @@ app_env:
   RABBITMQ_USER: realty
   ACCESS_TTL: 15m
   REFRESH_TTL: 30d
-  # stream: mail goes only to the worker log. The restored users have addresses on real mail
-  # domains (mail.ru, gmail.com, ...), so cron mail (expiry notices, digests) would reach strangers.
-  MAIL_TRANSPORT: stream
+  MAIL_TRANSPORT: real
+  # Users and viewings from the restored copy (dumped 2026-10-02 00:22 UTC) have addresses on real
+  # mail domains (mail.ru, gmail.com, ...): their mail stays in the log. Users registered on the
+  # site get real mail. Exempt addresses: vault_mail_allowed_recipients (personal, not in git).
+  MAIL_LEGACY_BEFORE: "2026-10-02T00:30:00Z"
   MAIL_FROM: realty-catalog-test@yandex.ru
   SMTP_HOST: smtp.yandex.ru
   # STARTTLS: the mailer uses secure: false.
