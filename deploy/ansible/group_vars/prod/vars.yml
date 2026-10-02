@@ -29,7 +29,9 @@ app_env:
   RABBITMQ_USER: realty
   ACCESS_TTL: 15m
   REFRESH_TTL: 30d
-  MAIL_TRANSPORT: real
+  # stream: mail goes only to the worker log. The restored users have addresses on real mail
+  # domains (mail.ru, gmail.com, ...), so cron mail (expiry notices, digests) would reach strangers.
+  MAIL_TRANSPORT: stream
   MAIL_FROM: realty-catalog-test@yandex.ru
   SMTP_HOST: smtp.yandex.ru
   # STARTTLS: the mailer uses secure: false.
