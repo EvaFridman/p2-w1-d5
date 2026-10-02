@@ -39,6 +39,65 @@ ssh realty 'timeout 5 bash -c "</dev/tcp/smtp.yandex.ru/587" && echo smtp ok'
 
 Если `docker pull` не проходит (ограничения Docker Hub), впишите зеркало в `group_vars/prod/vars.yml` — `docker_registry_mirrors: ["https://mirror.gcr.io"]` — и запустите `ansible-playbook base.yml` ещё раз.
 
+## Шаг 2. Секреты (Ansible Vault)
+
+Пароли БД и брокера, секреты JWT и ревалидации генерируются, пароль приложения Яндекса и DSN Sentry вписываются в редакторе — в историю терминала они не попадают:
+
+```bash
+cd deploy/ansible
+{
+  for k in postgres_password rabbitmq_password jwt_access_secret jwt_refresh_secret revalidate_secret next_build_secret; do
+    echo "vault_$k: $(openssl rand -hex 32)"
+  done
+  echo 'vault_smtp_pass: "ЗАМЕНИ"'
+  echo 'vault_sentry_dsn: "ЗАМЕНИ"'
+} | ansible-vault encrypt --output group_vars/prod/vault.yml
+EDITOR=nano ansible-vault edit group_vars/prod/vault.yml   # заменить оба ЗАМЕНИ, Ctrl+O, Enter, Ctrl+X
+ansible-vault view group_vars/prod/vault.yml | sed 's/:.*/: ***/'   # восемь ключей, без значений
+```
+
+Если Ansible спрашивает `Vault password`, вы не в папке `deploy/ansible`: `ansible.cfg` читается только из текущей папки.
+
+Несекретные настройки (домен, тег образов, пользователь БД, SMTP-сервер) — в `group_vars/prod/vars.yml`. `.env` на сервере собирается из обоих файлов при каждом деплое (`roles/app/templates/env.j2`), правки в нём на сервере затираются.
+
+## Шаг 3. Деплой
+
+`deploy.yml` копирует compose-файлы и Caddyfile в `/opt/realty`, пишет `.env`, ставит обёртку `realty-compose` (compose с тремя файлами), скачивает образы по `image_tag` и поднимает стек: инфраструктура → миграции → все сервисы → сброс кеша витрины → регистрация cron-задач в Temporal.
+
+```bash
+ansible-playbook deploy.yml
+```
+
+Новый релиз — новый `image_tag` в `vars.yml` (хеш merge-коммита в `main`, после того как CI опубликовал образы) и тот же запуск. Откат — прежний тег.
+
+На сервере:
+
+```bash
+ssh realty realty-compose ps            # все сервисы, кроме worker и temporal-worker, (healthy)
+ssh realty realty-compose logs -f api
+```
+
+## Шаг 4. Перенос рабочих данных
+
+Копия базы заливается только в пустую базу, до миграций. Поэтому на первом деплое сначала поднимается одна пустая `postgres`, затем копия, затем полный деплой.
+
+На Mac, из корня репозитория, при запущенном рабочем стеке (команды из README, «Обслуживание»):
+
+```bash
+docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB"' > backup-$(date +%F).sql
+docker compose exec -T api tar -C /app/uploads -cf - . > uploads-$(date +%F).tar
+```
+
+Файлы в git не попадают (`.gitignore`). Дальше из `deploy/ansible`:
+
+```bash
+ansible-playbook deploy.yml -e only_db=true
+ansible-playbook restore.yml -e backup=$PWD/../../backup-<дата>.sql -e uploads=$PWD/../../uploads-<дата>.tar
+ansible-playbook deploy.yml
+```
+
+`restore.yml` отказывается работать, если в базе уже есть таблицы, и удаляет копии с сервера после восстановления.
+
 ## Стек на сервере
 
 На сервере работают три compose-файла: `docker-compose.yml`, `docker-compose.prod.yml` и `deploy/docker-compose.server.yml`. Третий добавляет то, что нужно только серверу:

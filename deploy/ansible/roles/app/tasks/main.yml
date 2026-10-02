@@ -1,0 +1,86 @@
+# Compose files and .env to the server, images by tag, then the stack.
+# only_db=true starts just an empty postgres, for restoring a database copy before migrations.
+
+- name: Create the app directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}/deploy"
+    state: directory
+    mode: "0750"
+
+# Same layout as the repository: the server overlay refers to ./deploy/Caddyfile.
+- name: Copy the compose files and Caddyfile
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../{{ item }}"
+    dest: "{{ app_dir }}/{{ item }}"
+    mode: "0644"
+  loop:
+    - docker-compose.yml
+    - docker-compose.prod.yml
+    - deploy/docker-compose.server.yml
+    - deploy/Caddyfile
+
+- name: Write .env with settings and secrets
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ app_dir }}/.env"
+    mode: "0600"
+  # --diff would print the secrets.
+  diff: false
+
+- name: Install the realty-compose wrapper
+  ansible.builtin.template:
+    src: realty-compose.j2
+    dest: /usr/local/bin/realty-compose
+    mode: "0755"
+
+- name: Pull images
+  ansible.builtin.command: realty-compose pull --quiet
+  changed_when: false
+
+- name: Start only postgres (empty database for a restore)
+  when: only_db | default(false) | bool
+  ansible.builtin.command: realty-compose up -d --wait postgres
+  register: up_db
+  changed_when: "'Started' in up_db.stderr"
+
+- name: Start the whole stack
+  when: not (only_db | default(false) | bool)
+  block:
+    - name: Start postgres, redis and rabbitmq
+      ansible.builtin.command: realty-compose up -d --wait postgres redis rabbitmq
+      register: up_infra
+      changed_when: "'Started' in up_infra.stderr or 'Recreated' in up_infra.stderr"
+
+    - name: Apply migrations
+      ansible.builtin.command: realty-compose run --rm --no-deps api npx prisma migrate deploy
+      register: migrate
+      changed_when: "'No pending migrations' not in migrate.stdout"
+
+    - name: Start all services
+      ansible.builtin.command: realty-compose up -d --wait --wait-timeout 300 --remove-orphans
+      register: up_all
+      changed_when: "'Started' in up_all.stderr or 'Recreated' in up_all.stderr"
+
+    # The image was prerendered from CI seed data; drop cached catalog pages so they are
+    # rendered from this database (web/app/api/revalidate).
+    - name: Refresh cached catalog pages
+      ansible.builtin.command:
+        argv:
+          - realty-compose
+          - exec
+          - -T
+          - web
+          - node
+          - -e
+          - >-
+            const headers = { authorization: 'Bearer ' + process.env.REVALIDATE_SECRET, 'content-type': 'application/json' };
+            Promise.all(['listings', 'districts'].map((tag) =>
+            fetch('http://127.0.0.1:3001/api/revalidate', { method: 'POST', headers, body: JSON.stringify({ tag }) })
+            .then((r) => { if (!r.ok) throw new Error(tag + ': ' + r.status); })))
+            .catch((e) => { console.error(e.message); process.exit(1); });
+      changed_when: true
+
+    # Starts the four cron workflows; ones already running are skipped.
+    - name: Register cron workflows in Temporal
+      ansible.builtin.command: realty-compose run --rm --no-deps api node dist/temporal/scheduler.js
+      changed_when: false

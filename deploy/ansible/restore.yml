@@ -1,0 +1,58 @@
+# Restores a database copy and an uploads archive (README, "Обслуживание") from the Mac into the
+# server stack. Only into an empty database, before migrations: run deploy.yml -e only_db=true first.
+#   ansible-playbook restore.yml -e backup=/path/backup-YYYY-MM-DD.sql -e uploads=/path/uploads-YYYY-MM-DD.tar
+- name: Restore the database and uploads
+  hosts: prod
+  vars:
+    restore_dir: "{{ app_dir }}/restore"
+  tasks:
+    - name: Check that both files are given
+      ansible.builtin.assert:
+        that: [backup is defined, uploads is defined]
+        fail_msg: "Pass -e backup=<file.sql> -e uploads=<file.tar>"
+
+    - name: Count tables in the database
+      ansible.builtin.command:
+        argv:
+          - realty-compose
+          - exec
+          - -T
+          - postgres
+          - sh
+          - -c
+          - psql -tA -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "select count(*) from pg_tables where schemaname = current_schema()"
+      register: tables
+      changed_when: false
+
+    - name: Refuse a database that already has tables
+      ansible.builtin.assert:
+        that: tables.stdout | trim == "0"
+        fail_msg: >-
+          The database already has {{ tables.stdout | trim }} tables. A copy goes only into an empty
+          database; this one is not touched.
+
+    - name: Copy the files to the server
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ restore_dir }}/"
+        mode: "0600"
+      loop: ["{{ backup }}", "{{ uploads }}"]
+
+    - name: Restore the database
+      ansible.builtin.shell: >-
+        realty-compose exec -T postgres
+        sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+        < {{ restore_dir }}/{{ backup | basename | quote }}
+      changed_when: true
+
+    - name: Restore photos and avatars into the uploads volume
+      ansible.builtin.shell: >-
+        realty-compose run --rm --no-deps -T api tar -xf - -C /app/uploads
+        < {{ restore_dir }}/{{ uploads | basename | quote }}
+      changed_when: true
+
+    # The copies hold user data; the originals stay on the Mac.
+    - name: Remove the copies from the server
+      ansible.builtin.file:
+        path: "{{ restore_dir }}"
+        state: absent
