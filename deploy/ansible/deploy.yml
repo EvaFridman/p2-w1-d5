@@ -1,0 +1,7 @@
+# Deploys the stack with the images from group_vars/prod/vars.yml (image_tag). Safe to re-run.
+#   ansible-playbook deploy.yml                    # whole stack, migrations, cron workflows
+#   ansible-playbook deploy.yml -e only_db=true    # files and an empty postgres, before a restore
+- name: Deploy the realty stack
+  hosts: prod
+  roles:
+    - app

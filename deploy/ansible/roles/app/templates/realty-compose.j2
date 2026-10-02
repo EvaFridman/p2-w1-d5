@@ -1,0 +1,5 @@
+#!/bin/sh
+# docker compose with the three production files: realty-compose ps, realty-compose logs -f api, ...
+# Managed by Ansible (deploy/ansible, role app).
+cd {{ app_dir }} || exit 1
+exec docker compose -f docker-compose.yml -f docker-compose.prod.yml -f deploy/docker-compose.server.yml "$@"

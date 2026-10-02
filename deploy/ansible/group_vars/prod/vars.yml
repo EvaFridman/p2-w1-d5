@@ -5,3 +5,40 @@ swap_size_mb: 2048
 # Docker Hub mirror, used only if pulls from Docker Hub fail on the server,
 # e.g. ["https://mirror.gcr.io"].
 docker_registry_mirrors: []
+
+# Where the compose files and .env live on the server.
+app_dir: /opt/realty
+
+# Images CI published from main: the 7-char hash of the merge commit (git rev-parse --short=7 HEAD).
+# Changing it and re-running deploy.yml is a release; the previous value is a rollback.
+image_tag: "09d0332"
+
+site_domain: realty-catalog.site
+
+# Non-secret part of the server's .env (names: root .env.example). Secrets: templates/env.j2.
+# POSTGRES_USER must match the local stack: the database copy assigns objects to that role.
+app_env:
+  IMAGE_REGISTRY: ghcr.io/evafridman/
+  IMAGE_TAG: "{{ image_tag }}"
+  SITE_DOMAIN: "{{ site_domain }}"
+  SITE_URL: "https://{{ site_domain }}"
+  # No admin client: CORS allows only the site itself.
+  CLIENT_URL: "https://{{ site_domain }}"
+  POSTGRES_USER: realty
+  POSTGRES_DB: realty
+  RABBITMQ_USER: realty
+  ACCESS_TTL: 15m
+  REFRESH_TTL: 30d
+  # stream: mail goes only to the worker log. The restored users have addresses on real mail
+  # domains (mail.ru, gmail.com, ...), so cron mail (expiry notices, digests) would reach strangers.
+  MAIL_TRANSPORT: stream
+  MAIL_FROM: realty-catalog-test@yandex.ru
+  SMTP_HOST: smtp.yandex.ru
+  # STARTTLS: the mailer uses secure: false.
+  SMTP_PORT: 587
+  SMTP_USER: realty-catalog-test@yandex.ru
+  PAGE_SIZE_DEFAULT: 20
+  PAGE_SIZE_MAX: 100
+  LOG_LEVEL: info
+  TEMPORAL_ADDRESS: temporal:7233
+  SENTRY_ENVIRONMENT: production
