@@ -113,6 +113,8 @@ cd deploy/ansible && ansible-playbook deploy.yml   # сбросить кеш в�
 
 На сервере `MAIL_TRANSPORT=real`. У перенесённых пользователей адреса на настоящих почтовых доменах, поэтому письма адресатам из данных, созданных раньше `MAIL_LEGACY_BEFORE` (пользователи и заявки на просмотр), только пишутся в лог (`Mail to an address from imported data written to the log, not sent`). Зарегистрированные на сайте после этого момента получают настоящие письма. Исключения — `vault_mail_allowed_recipients` в Vault (через запятую), личные адреса в git не попадают.
 
+Без админки с витрины письмо вызывает только заявка на просмотр: оно уходит агенту объявления (`worker`, с PDF карточки). Для показа на проде объявление `7` закреплено за агентом с адресом из `vault_mail_allowed_recipients`: заявка на него без входа приводит к письму и строке `Mail sent by worker` в `realty-compose logs worker`.
+
 ## Стек на сервере
 
 На сервере работают три compose-файла: `docker-compose.yml`, `docker-compose.prod.yml` и `deploy/docker-compose.server.yml`. Третий добавляет то, что нужно только серверу:
